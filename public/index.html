@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Stock Screener</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <h1>Market Screener</h1>
+        <p>Live market leaders with search, sector filtering, and automatic refresh.</p>
+      </div>
+    </header>
+
+    <nav class="tabs" aria-label="Markets">
+      <a class="tab" href="/?market=top-us" data-market="top-us">My Top US Stocks</a>
+      <a class="tab" href="/?market=top-india" data-market="top-india">My Top Indian Stocks</a>
+      <a class="tab" href="/?market=top-crypto" data-market="top-crypto">My Top Crypto</a>
+      <a class="tab active" href="/?market=us" data-market="us">US Stocks</a>
+      <a class="tab" href="/?market=india" data-market="india">Indian Stocks</a>
+      <a class="tab" href="/?market=crypto" data-market="crypto">Crypto</a>
+    </nav>
+
+    <main>
+      <section class="summary">
+        <div>
+          <span class="label">Market</span>
+          <strong id="marketTitle">Loading</strong>
+        </div>
+        <div>
+          <span class="label">Source</span>
+          <strong id="sourceTitle">--</strong>
+        </div>
+        <div>
+          <span class="label">Last scan</span>
+          <strong id="scanTime">--</strong>
+        </div>
+        <div>
+          <span class="label">Supabase</span>
+          <strong id="storageStatus">--</strong>
+        </div>
+        <div>
+          <span class="label">Realtime</span>
+          <strong id="realtimeStatus">Auto 30s</strong>
+        </div>
+      </section>
+
+      <section class="toolbar">
+        <label>
+          Search
+          <input id="searchInput" type="search" placeholder="Symbol, company, exchange">
+        </label>
+        <label>
+          Rows
+          <select id="limitSelect">
+            <option value="50">50</option>
+            <option value="100" selected>100</option>
+            <option value="250">250</option>
+          </select>
+        </label>
+        <label id="sectorFilterLabel" hidden>
+          Sector
+          <select id="sectorSelect">
+            <option value="">All sectors</option>
+          </select>
+        </label>
+        <label id="sortFilterLabel">
+          Sort by
+          <select id="sortSelect">
+            <option value="changePercent" selected>Current change %</option>
+            <option value="price">Current price</option>
+            <option value="preMarketPrice">Pre-market price</option>
+            <option value="postMarketPrice">Overnight price</option>
+            <option value="preMarketChangePercent">Pre-market change %</option>
+            <option value="postMarketChangePercent">Overnight change %</option>
+          </select>
+        </label>
+        <label id="orderFilterLabel">
+          Order
+          <select id="directionSelect">
+            <option value="asc" selected>Ascending</option>
+            <option value="desc">Descending</option>
+          </select>
+        </label>
+        <label class="checkboxLabel">
+          <input id="autoRefreshInput" type="checkbox" checked>
+          Auto refresh
+        </label>
+      </section>
+
+      <section class="workspace" aria-live="polite">
+        <aside class="watchlistPanel">
+          <div class="watchlistHeader">
+            <strong>Watchlists</strong>
+            <span id="watchlistCount">--</span>
+          </div>
+          <div id="status" class="status">Loading market data...</div>
+          <div class="tableWrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Symbol</th>
+                  <th>Trend</th>
+                  <th>Price</th>
+                  <th>Pre</th>
+                  <th>Overnight</th>
+                  <th>% Chg</th>
+                  <th>Chg</th>
+                </tr>
+              </thead>
+              <tbody id="rows"></tbody>
+            </table>
+          </div>
+        </aside>
+
+        <section class="chartPanel">
+          <div class="chartHeader">
+            <div>
+              <span id="selectedSymbol" class="selectedSymbol">--</span>
+              <span id="selectedPrice" class="selectedPrice">--</span>
+              <span id="selectedChange" class="selectedChange">--</span>
+            </div>
+            <a id="detailsLink" class="detailsLink" href="#" target="_blank" rel="noopener noreferrer">Details</a>
+          </div>
+
+          <nav class="chartTabs" aria-label="Symbol details">
+            <span class="chartTab active">Chart</span>
+            <span class="chartTab">Financials</span>
+            <span class="chartTab">Valuation</span>
+            <span class="chartTab">Profile</span>
+          </nav>
+
+          <div class="chartToolbar">
+            <span>Indicators</span>
+            <span class="activeRange">1D</span>
+            <span>1M</span>
+            <span>3M</span>
+            <span>6M</span>
+            <span>1Y</span>
+          </div>
+
+          <div id="chartMeta" class="chartMeta">Select a symbol to view the chart.</div>
+          <div class="chartCanvasWrap">
+            <canvas id="priceChart" width="980" height="520"></canvas>
+          </div>
+        </section>
+      </section>
+
+      <section class="pagination" aria-label="Pagination">
+        <button id="prevPageButton" type="button">Previous</button>
+        <span id="pageInfo">Page 1</span>
+        <button id="nextPageButton" type="button">Next</button>
+      </section>
+    </main>
+
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>

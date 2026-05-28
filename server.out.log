@@ -1,0 +1,5 @@
+
+> stock-screener-app@1.0.0 start
+> node server.js
+
+Stock screener running at http://localhost:3000
