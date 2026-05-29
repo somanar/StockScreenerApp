@@ -1,257 +1,36 @@
 Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Skipping ABR$D: Yahoo chart returned 404
-Skipping ABR$F: Yahoo chart returned 404
 Skipping ABR$E: Yahoo chart returned 404
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Skipping ABR$F: Yahoo chart returned 404
+Skipping ABR$D: Yahoo chart returned 404
 Skipping ACHR-W: Yahoo chart returned 404
 Skipping ACP$A: Yahoo chart returned 404
-Skipping ACR$D: Yahoo chart returned 404
 Skipping ACR$C: Yahoo chart returned 404
+Skipping ACR$D: Yahoo chart returned 404
 Skipping ADC$A: Yahoo chart returned 404
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Skipping AGM$D: Yahoo chart returned 404
 Skipping AGM$H: Yahoo chart returned 404
 Skipping AGM$G: Yahoo chart returned 404
-Skipping AGM$I: Yahoo chart returned 404
-Skipping AGM$D: Yahoo chart returned 404
 Skipping AGM$E: Yahoo chart returned 404
+Skipping AGM$I: Yahoo chart returned 404
 Skipping AGM$F: Yahoo chart returned 404
 Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
 Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
 Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
 Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Skipping ABR$D: Yahoo chart returned 404
 Skipping ABR$E: Yahoo chart returned 404
 Skipping ABR$F: Yahoo chart returned 404
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Skipping ABR$D: Yahoo chart returned 404
 Skipping ACHR-W: Yahoo chart returned 404
 Skipping ACR$C: Yahoo chart returned 404
 Skipping ACP$A: Yahoo chart returned 404
 Skipping ACR$D: Yahoo chart returned 404
 Skipping ADC$A: Yahoo chart returned 404
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Skipping AGM$F: Yahoo chart returned 404
+Skipping AGM$G: Yahoo chart returned 404
 Skipping AGM$D: Yahoo chart returned 404
 Skipping AGM$E: Yahoo chart returned 404
-Skipping AGM$F: Yahoo chart returned 404
-Skipping AGM$H: Yahoo chart returned 404
-Skipping AGM$G: Yahoo chart returned 404
 Skipping AGM$I: Yahoo chart returned 404
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Skipping ABR$D: Yahoo chart returned 404
-Skipping ABR$F: Yahoo chart returned 404
-Skipping ABR$E: Yahoo chart returned 404
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Skipping ACHR-W: Yahoo chart returned 404
-Skipping ACR$C: Yahoo chart returned 404
-Skipping ACR$D: Yahoo chart returned 404
-Skipping ACP$A: Yahoo chart returned 404
-Skipping ADC$A: Yahoo chart returned 404
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Skipping AGM$F: Yahoo chart returned 404
-Skipping AGM$D: Yahoo chart returned 404
-Skipping AGM$E: Yahoo chart returned 404
 Skipping AGM$H: Yahoo chart returned 404
-Skipping AGM$G: Yahoo chart returned 404
-Skipping AGM$I: Yahoo chart returned 404
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Skipping ABR$D: Yahoo chart returned 404
-Skipping ABR$F: Yahoo chart returned 404
-Skipping ABR$E: Yahoo chart returned 404
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Skipping ACHR-W: Yahoo chart returned 404
-Skipping ACR$C: Yahoo chart returned 404
-Skipping ACP$A: Yahoo chart returned 404
-Skipping ACR$D: Yahoo chart returned 404
-Skipping ADC$A: Yahoo chart returned 404
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Skipping AGM$E: Yahoo chart returned 404
-Skipping AGM$G: Yahoo chart returned 404
-Skipping AGM$I: Yahoo chart returned 404
-Skipping AGM$D: Yahoo chart returned 404
-Skipping AGM$H: Yahoo chart returned 404
-Skipping AGM$F: Yahoo chart returned 404
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Skipping ABR$F: Yahoo chart returned 404
-Skipping ABR$D: Yahoo chart returned 404
-Skipping ABR$E: Yahoo chart returned 404
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Skipping ACHR-W: Yahoo chart returned 404
-Skipping ACR$C: Yahoo chart returned 404
-Skipping ACP$A: Yahoo chart returned 404
-Skipping ACR$D: Yahoo chart returned 404
-Skipping ADC$A: Yahoo chart returned 404
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Skipping AGM$G: Yahoo chart returned 404
-Skipping AGM$H: Yahoo chart returned 404
-Skipping AGM$E: Yahoo chart returned 404
-Skipping AGM$F: Yahoo chart returned 404
-Skipping AGM$D: Yahoo chart returned 404
-Skipping AGM$I: Yahoo chart returned 404
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Error: Yahoo chart returned 404
-    at fetchYahooHistoricalChart (file:///C:/Users/SOMAN/OneDrive/Documents/StockScreenerApp/server.js:1047:11)
-    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
-    at async handleChart (file:///C:/Users/SOMAN/OneDrive/Documents/StockScreenerApp/server.js:239:19)
-    at async Server.<anonymous> (file:///C:/Users/SOMAN/OneDrive/Documents/StockScreenerApp/server.js:89:7)
-Error: Yahoo chart returned 404
-    at fetchYahooHistoricalChart (file:///C:/Users/SOMAN/OneDrive/Documents/StockScreenerApp/server.js:1047:11)
-    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
-    at async handleChart (file:///C:/Users/SOMAN/OneDrive/Documents/StockScreenerApp/server.js:239:19)
-    at async Server.<anonymous> (file:///C:/Users/SOMAN/OneDrive/Documents/StockScreenerApp/server.js:89:7)
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Error: Yahoo chart returned 404
-    at fetchYahooHistoricalChart (file:///C:/Users/SOMAN/OneDrive/Documents/StockScreenerApp/server.js:1047:11)
-    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
-    at async handleChart (file:///C:/Users/SOMAN/OneDrive/Documents/StockScreenerApp/server.js:239:19)
-    at async Server.<anonymous> (file:///C:/Users/SOMAN/OneDrive/Documents/StockScreenerApp/server.js:89:7)
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Skipping ABR$D: Yahoo chart returned 404
-Skipping ABR$E: Yahoo chart returned 404
-Skipping ABR$F: Yahoo chart returned 404
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Skipping ACHR-W: Yahoo chart returned 404
-Skipping ACR$D: Yahoo chart returned 404
-Skipping ACP$A: Yahoo chart returned 404
-Skipping ACR$C: Yahoo chart returned 404
-Skipping ADC$A: Yahoo chart returned 404
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Error: Yahoo chart returned 404
-    at fetchYahooHistoricalChart (file:///C:/Users/SOMAN/OneDrive/Documents/StockScreenerApp/server.js:1047:11)
-    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
-    at async handleChart (file:///C:/Users/SOMAN/OneDrive/Documents/StockScreenerApp/server.js:239:19)
-    at async Server.<anonymous> (file:///C:/Users/SOMAN/OneDrive/Documents/StockScreenerApp/server.js:89:7)
-Skipping AGM$D: Yahoo chart returned 404
-Skipping AGM$E: Yahoo chart returned 404
-Skipping AGM$G: Yahoo chart returned 404
-Skipping AGM$H: Yahoo chart returned 404
-Skipping AGM$F: Yahoo chart returned 404
-Skipping AGM$I: Yahoo chart returned 404
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Error: Yahoo chart returned 404
-    at fetchYahooHistoricalChart (file:///C:/Users/SOMAN/OneDrive/Documents/StockScreenerApp/server.js:1047:11)
-    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
-    at async handleChart (file:///C:/Users/SOMAN/OneDrive/Documents/StockScreenerApp/server.js:239:19)
-    at async Server.<anonymous> (file:///C:/Users/SOMAN/OneDrive/Documents/StockScreenerApp/server.js:89:7)
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Skipping ABR$D: Yahoo chart returned 404
-Skipping ABR$F: Yahoo chart returned 404
-Skipping ABR$E: Yahoo chart returned 404
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Skipping ACHR-W: Yahoo chart returned 404
-Skipping ACP$A: Yahoo chart returned 404
-Skipping ACR$D: Yahoo chart returned 404
-Skipping ACR$C: Yahoo chart returned 404
-Skipping ADC$A: Yahoo chart returned 404
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Skipping AGM$E: Yahoo chart returned 404
-Skipping AGM$G: Yahoo chart returned 404
-Skipping AGM$H: Yahoo chart returned 404
-Skipping AGM$F: Yahoo chart returned 404
-Skipping AGM$I: Yahoo chart returned 404
-Skipping AGM$D: Yahoo chart returned 404
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Skipping ABR$E: Yahoo chart returned 404
-Skipping ABR$D: Yahoo chart returned 404
-Skipping ABR$F: Yahoo chart returned 404
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Skipping ACHR-W: Yahoo chart returned 404
-Skipping ACP$A: Yahoo chart returned 404
-Skipping ACR$D: Yahoo chart returned 404
-Skipping ACR$C: Yahoo chart returned 404
-Skipping ADC$A: Yahoo chart returned 404
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Skipping AGM$G: Yahoo chart returned 404
-Skipping AGM$E: Yahoo chart returned 404
-Skipping AGM$F: Yahoo chart returned 404
-Skipping AGM$H: Yahoo chart returned 404
-Skipping AGM$I: Yahoo chart returned 404
-Skipping AGM$D: Yahoo chart returned 404
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Skipping ABR$D: Yahoo chart returned 404
-Skipping ABR$E: Yahoo chart returned 404
-Skipping ABR$F: Yahoo chart returned 404
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Skipping ACHR-W: Yahoo chart returned 404
-Skipping ACR$D: Yahoo chart returned 404
-Skipping ACR$C: Yahoo chart returned 404
-Skipping ACP$A: Yahoo chart returned 404
-Skipping ADC$A: Yahoo chart returned 404
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Skipping AGM$F: Yahoo chart returned 404
-Skipping AGM$I: Yahoo chart returned 404
-Skipping AGM$E: Yahoo chart returned 404
-Skipping AGM$G: Yahoo chart returned 404
-Skipping AGM$H: Yahoo chart returned 404
-Skipping AGM$D: Yahoo chart returned 404
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Skipping ABR$E: Yahoo chart returned 404
-Skipping ABR$D: Yahoo chart returned 404
-Skipping ABR$F: Yahoo chart returned 404
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Skipping ACR$C: Yahoo chart returned 404
-Skipping ACR$D: Yahoo chart returned 404
-Skipping ACHR-W: Yahoo chart returned 404
-Skipping ACP$A: Yahoo chart returned 404
-Skipping ADC$A: Yahoo chart returned 404
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Skipping AGM$F: Yahoo chart returned 404
-Skipping AGM$E: Yahoo chart returned 404
-Skipping AGM$I: Yahoo chart returned 404
-Skipping AGM$D: Yahoo chart returned 404
-Skipping AGM$H: Yahoo chart returned 404
-Skipping AGM$G: Yahoo chart returned 404
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Skipping ABR$F: Yahoo chart returned 404
-Skipping ABR$D: Yahoo chart returned 404
-Skipping ABR$E: Yahoo chart returned 404
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Skipping ACHR-W: Yahoo chart returned 404
-Skipping ACR$C: Yahoo chart returned 404
-Skipping ACP$A: Yahoo chart returned 404
-Skipping ACR$D: Yahoo chart returned 404
-Skipping ADC$A: Yahoo chart returned 404
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Skipping AGM$D: Yahoo chart returned 404
-Skipping AGM$G: Yahoo chart returned 404
-Skipping AGM$H: Yahoo chart returned 404
-Skipping AGM$F: Yahoo chart returned 404
-Skipping AGM$E: Yahoo chart returned 404
-Skipping AGM$I: Yahoo chart returned 404
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
 Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
 Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
 Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
@@ -259,41 +38,17 @@ Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
 Skipping ABR$F: Yahoo chart returned 404
 Skipping ABR$E: Yahoo chart returned 404
 Skipping ABR$D: Yahoo chart returned 404
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
 Skipping ACHR-W: Yahoo chart returned 404
-Skipping ACP$A: Yahoo chart returned 404
 Skipping ACR$D: Yahoo chart returned 404
-Skipping ACR$C: Yahoo chart returned 404
+Skipping ACP$A: Yahoo chart returned 404
 Skipping ADC$A: Yahoo chart returned 404
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Skipping AGM$D: Yahoo chart returned 404
-Skipping AGM$G: Yahoo chart returned 404
-Skipping AGM$H: Yahoo chart returned 404
+Skipping ACR$C: Yahoo chart returned 404
 Skipping AGM$E: Yahoo chart returned 404
 Skipping AGM$F: Yahoo chart returned 404
-Skipping AGM$I: Yahoo chart returned 404
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Skipping ABR$E: Yahoo chart returned 404
-Skipping ABR$D: Yahoo chart returned 404
-Skipping ABR$F: Yahoo chart returned 404
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Skipping ACHR-W: Yahoo chart returned 404
-Skipping ACP$A: Yahoo chart returned 404
-Skipping ACR$C: Yahoo chart returned 404
-Skipping ACR$D: Yahoo chart returned 404
-Skipping ADC$A: Yahoo chart returned 404
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Skipping AGM$E: Yahoo chart returned 404
-Skipping AGM$D: Yahoo chart returned 404
-Skipping AGM$I: Yahoo chart returned 404
 Skipping AGM$G: Yahoo chart returned 404
-Skipping AGM$F: Yahoo chart returned 404
 Skipping AGM$H: Yahoo chart returned 404
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Skipping AGM$I: Yahoo chart returned 404
+Skipping AGM$D: Yahoo chart returned 404
 Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
 Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
 Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
@@ -301,104 +56,43 @@ Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
 Skipping ABR$D: Yahoo chart returned 404
 Skipping ABR$E: Yahoo chart returned 404
 Skipping ABR$F: Yahoo chart returned 404
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
 Skipping ACHR-W: Yahoo chart returned 404
 Skipping ACP$A: Yahoo chart returned 404
-Skipping ACR$D: Yahoo chart returned 404
 Skipping ACR$C: Yahoo chart returned 404
+Skipping ACR$D: Yahoo chart returned 404
 Skipping ADC$A: Yahoo chart returned 404
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Skipping AGM$H: Yahoo chart returned 404
+Skipping AGM$F: Yahoo chart returned 404
+Skipping AGM$I: Yahoo chart returned 404
 Skipping AGM$G: Yahoo chart returned 404
 Skipping AGM$E: Yahoo chart returned 404
 Skipping AGM$D: Yahoo chart returned 404
-Skipping AGM$F: Yahoo chart returned 404
-Skipping AGM$I: Yahoo chart returned 404
-Skipping AGM$H: Yahoo chart returned 404
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Skipping ABR$F: Yahoo chart returned 404
-Skipping ABR$D: Yahoo chart returned 404
-Skipping ABR$E: Yahoo chart returned 404
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Skipping ACHR-W: Yahoo chart returned 404
-Skipping ACP$A: Yahoo chart returned 404
-Skipping ACR$D: Yahoo chart returned 404
-Skipping ACR$C: Yahoo chart returned 404
-Skipping ADC$A: Yahoo chart returned 404
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Skipping AGM$D: Yahoo chart returned 404
-Skipping AGM$H: Yahoo chart returned 404
-Skipping AGM$E: Yahoo chart returned 404
-Skipping AGM$G: Yahoo chart returned 404
-Skipping AGM$I: Yahoo chart returned 404
-Skipping AGM$F: Yahoo chart returned 404
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
 Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
 Skipping ABR$D: Yahoo chart returned 404
 Skipping ABR$F: Yahoo chart returned 404
 Skipping ABR$E: Yahoo chart returned 404
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Skipping ACP$A: Yahoo chart returned 404
+Skipping ACHR-W: Yahoo chart returned 404
 Skipping ACR$C: Yahoo chart returned 404
-Skipping ACHR-W: Yahoo chart returned 404
-Skipping ACR$D: Yahoo chart returned 404
-Skipping ADC$A: Yahoo chart returned 404
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Skipping AGM$D: Yahoo chart returned 404
-Skipping AGM$E: Yahoo chart returned 404
-Skipping AGM$F: Yahoo chart returned 404
-Skipping AGM$G: Yahoo chart returned 404
-Skipping AGM$I: Yahoo chart returned 404
-Skipping AGM$H: Yahoo chart returned 404
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Skipping ABR$D: Yahoo chart returned 404
-Skipping ABR$F: Yahoo chart returned 404
-Skipping ABR$E: Yahoo chart returned 404
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Skipping ACHR-W: Yahoo chart returned 404
 Skipping ACR$D: Yahoo chart returned 404
 Skipping ACP$A: Yahoo chart returned 404
-Skipping ACR$C: Yahoo chart returned 404
 Skipping ADC$A: Yahoo chart returned 404
 Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Skipping AGM$D: Yahoo chart returned 404
-Skipping AGM$F: Yahoo chart returned 404
-Skipping AGM$G: Yahoo chart returned 404
-Skipping AGM$E: Yahoo chart returned 404
-Skipping AGM$H: Yahoo chart returned 404
-Skipping AGM$I: Yahoo chart returned 404
 Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
 Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
-Skipping ABR$D: Yahoo chart returned 404
 Skipping ABR$E: Yahoo chart returned 404
 Skipping ABR$F: Yahoo chart returned 404
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Skipping ABR$D: Yahoo chart returned 404
 Skipping ACHR-W: Yahoo chart returned 404
-Skipping ACP$A: Yahoo chart returned 404
 Skipping ACR$C: Yahoo chart returned 404
 Skipping ACR$D: Yahoo chart returned 404
+Skipping ACP$A: Yahoo chart returned 404
 Skipping ADC$A: Yahoo chart returned 404
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Skipping AGM$E: Yahoo chart returned 404
+Skipping AGM$I: Yahoo chart returned 404
+Skipping AGM$F: Yahoo chart returned 404
+Skipping AGM$H: Yahoo chart returned 404
 Skipping AGM$D: Yahoo chart returned 404
 Skipping AGM$G: Yahoo chart returned 404
-Skipping AGM$H: Yahoo chart returned 404
-Skipping AGM$E: Yahoo chart returned 404
-Skipping AGM$F: Yahoo chart returned 404
-Skipping AGM$I: Yahoo chart returned 404
-Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
 Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
 Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
 Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
@@ -406,19 +100,503 @@ Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
 Skipping ABR$E: Yahoo chart returned 404
 Skipping ABR$D: Yahoo chart returned 404
 Skipping ABR$F: Yahoo chart returned 404
+Skipping ACHR-W: Yahoo chart returned 404
+Skipping ACR$C: Yahoo chart returned 404
+Skipping ACR$D: Yahoo chart returned 404
+Skipping ACP$A: Yahoo chart returned 404
+Skipping ADC$A: Yahoo chart returned 404
+Skipping AGM$E: Yahoo chart returned 404
+Skipping AGM$D: Yahoo chart returned 404
+Skipping AGM$F: Yahoo chart returned 404
+Skipping AGM$H: Yahoo chart returned 404
+Skipping AGM$G: Yahoo chart returned 404
+Skipping AGM$I: Yahoo chart returned 404
 Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Skipping ABR$D: Yahoo chart returned 404
+Skipping ABR$F: Yahoo chart returned 404
+Skipping ABR$E: Yahoo chart returned 404
+Skipping ACHR-W: Yahoo chart returned 404
+Skipping ACP$A: Yahoo chart returned 404
+Skipping ACR$C: Yahoo chart returned 404
+Skipping ACR$D: Yahoo chart returned 404
+Skipping ADC$A: Yahoo chart returned 404
+Skipping AGM$E: Yahoo chart returned 404
+Skipping AGM$D: Yahoo chart returned 404
+Skipping AGM$F: Yahoo chart returned 404
+Skipping AGM$G: Yahoo chart returned 404
+Skipping AGM$H: Yahoo chart returned 404
+Skipping AGM$I: Yahoo chart returned 404
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Skipping ABR$E: Yahoo chart returned 404
+Skipping ABR$D: Yahoo chart returned 404
+Skipping ABR$F: Yahoo chart returned 404
+Skipping ACHR-W: Yahoo chart returned 404
+Skipping ACR$C: Yahoo chart returned 404
+Skipping ACR$D: Yahoo chart returned 404
+Skipping ACP$A: Yahoo chart returned 404
+Skipping ADC$A: Yahoo chart returned 404
+Skipping AGM$G: Yahoo chart returned 404
+Skipping AGM$D: Yahoo chart returned 404
+Skipping AGM$E: Yahoo chart returned 404
+Skipping AGM$H: Yahoo chart returned 404
+Skipping AGM$I: Yahoo chart returned 404
+Skipping AGM$F: Yahoo chart returned 404
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Skipping ABR$E: Yahoo chart returned 404
+Skipping ABR$F: Yahoo chart returned 404
+Skipping ABR$D: Yahoo chart returned 404
+Skipping ACHR-W: Yahoo chart returned 404
+Skipping ACR$C: Yahoo chart returned 404
+Skipping ACP$A: Yahoo chart returned 404
+Skipping ACR$D: Yahoo chart returned 404
+Skipping ADC$A: Yahoo chart returned 404
+Skipping AGM$D: Yahoo chart returned 404
+Skipping AGM$E: Yahoo chart returned 404
+Skipping AGM$I: Yahoo chart returned 404
+Skipping AGM$H: Yahoo chart returned 404
+Skipping AGM$F: Yahoo chart returned 404
+Skipping AGM$G: Yahoo chart returned 404
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Skipping ABR$F: Yahoo chart returned 404
+Skipping ABR$D: Yahoo chart returned 404
+Skipping ABR$E: Yahoo chart returned 404
+Skipping ACHR-W: Yahoo chart returned 404
+Skipping ACR$C: Yahoo chart returned 404
+Skipping ACP$A: Yahoo chart returned 404
+Skipping ACR$D: Yahoo chart returned 404
+Skipping ADC$A: Yahoo chart returned 404
+Skipping AGM$D: Yahoo chart returned 404
+Skipping AGM$H: Yahoo chart returned 404
+Skipping AGM$F: Yahoo chart returned 404
+Skipping AGM$E: Yahoo chart returned 404
+Skipping AGM$G: Yahoo chart returned 404
+Skipping AGM$I: Yahoo chart returned 404
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Skipping ABR$E: Yahoo chart returned 404
+Skipping ABR$D: Yahoo chart returned 404
+Skipping ABR$F: Yahoo chart returned 404
+Skipping ACHR-W: Yahoo chart returned 404
+Skipping ACP$A: Yahoo chart returned 404
+Skipping ACR$C: Yahoo chart returned 404
+Skipping ACR$D: Yahoo chart returned 404
+Skipping ADC$A: Yahoo chart returned 404
+Skipping AGM$F: Yahoo chart returned 404
+Skipping AGM$G: Yahoo chart returned 404
+Skipping AGM$E: Yahoo chart returned 404
+Skipping AGM$H: Yahoo chart returned 404
+Skipping AGM$I: Yahoo chart returned 404
+Skipping AGM$D: Yahoo chart returned 404
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Skipping ABR$D: Yahoo chart returned 404
+Skipping ABR$E: Yahoo chart returned 404
+Skipping ABR$F: Yahoo chart returned 404
+Skipping ACHR-W: Yahoo chart returned 404
+Skipping ACR$C: Yahoo chart returned 404
+Skipping ACP$A: Yahoo chart returned 404
+Skipping ACR$D: Yahoo chart returned 404
+Skipping ADC$A: Yahoo chart returned 404
+Skipping AGM$D: Yahoo chart returned 404
+Skipping AGM$G: Yahoo chart returned 404
+Skipping AGM$H: Yahoo chart returned 404
+Skipping AGM$I: Yahoo chart returned 404
+Skipping AGM$E: Yahoo chart returned 404
+Skipping AGM$F: Yahoo chart returned 404
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Skipping ABR$E: Yahoo chart returned 404
+Skipping ABR$F: Yahoo chart returned 404
+Skipping ABR$D: Yahoo chart returned 404
+Skipping ACP$A: Yahoo chart returned 404
+Skipping ACR$D: Yahoo chart returned 404
+Skipping ACHR-W: Yahoo chart returned 404
+Skipping ACR$C: Yahoo chart returned 404
+Skipping ADC$A: Yahoo chart returned 404
+Skipping AGM$D: Yahoo chart returned 404
+Skipping AGM$H: Yahoo chart returned 404
+Skipping AGM$I: Yahoo chart returned 404
+Skipping AGM$G: Yahoo chart returned 404
+Skipping AGM$E: Yahoo chart returned 404
+Skipping AGM$F: Yahoo chart returned 404
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Skipping ABR$F: Yahoo chart returned 404
+Skipping ABR$E: Yahoo chart returned 404
+Skipping ABR$D: Yahoo chart returned 404
+Skipping ACHR-W: Yahoo chart returned 404
+Skipping ACR$C: Yahoo chart returned 404
+Skipping ACR$D: Yahoo chart returned 404
+Skipping ACP$A: Yahoo chart returned 404
+Skipping ADC$A: Yahoo chart returned 404
+Skipping AGM$E: Yahoo chart returned 404
+Skipping AGM$G: Yahoo chart returned 404
+Skipping AGM$F: Yahoo chart returned 404
+Skipping AGM$I: Yahoo chart returned 404
+Skipping AGM$D: Yahoo chart returned 404
+Skipping AGM$H: Yahoo chart returned 404
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Skipping ABR$E: Yahoo chart returned 404
+Skipping ABR$F: Yahoo chart returned 404
+Skipping ABR$D: Yahoo chart returned 404
+Skipping ACHR-W: Yahoo chart returned 404
+Skipping ACR$C: Yahoo chart returned 404
+Skipping ACR$D: Yahoo chart returned 404
+Skipping ACP$A: Yahoo chart returned 404
+Skipping ADC$A: Yahoo chart returned 404
+Skipping AGM$F: Yahoo chart returned 404
+Skipping AGM$E: Yahoo chart returned 404
+Skipping AGM$D: Yahoo chart returned 404
+Skipping AGM$G: Yahoo chart returned 404
+Skipping AGM$H: Yahoo chart returned 404
+Skipping AGM$I: Yahoo chart returned 404
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Skipping ABR$D: Yahoo chart returned 404
+Skipping ABR$E: Yahoo chart returned 404
+Skipping ABR$F: Yahoo chart returned 404
+Skipping ACHR-W: Yahoo chart returned 404
+Skipping ACP$A: Yahoo chart returned 404
+Skipping ACR$C: Yahoo chart returned 404
+Skipping ACR$D: Yahoo chart returned 404
+Skipping ADC$A: Yahoo chart returned 404
+Skipping AGM$D: Yahoo chart returned 404
+Skipping AGM$F: Yahoo chart returned 404
+Skipping AGM$E: Yahoo chart returned 404
+Skipping AGM$G: Yahoo chart returned 404
+Skipping AGM$I: Yahoo chart returned 404
+Skipping AGM$H: Yahoo chart returned 404
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Skipping ABR$E: Yahoo chart returned 404
+Skipping ABR$F: Yahoo chart returned 404
+Skipping ABR$D: Yahoo chart returned 404
+Skipping ACHR-W: Yahoo chart returned 404
+Skipping ACR$C: Yahoo chart returned 404
+Skipping ACP$A: Yahoo chart returned 404
+Skipping ACR$D: Yahoo chart returned 404
+Skipping ADC$A: Yahoo chart returned 404
+Skipping AGM$F: Yahoo chart returned 404
+Skipping AGM$H: Yahoo chart returned 404
+Skipping AGM$I: Yahoo chart returned 404
+Skipping AGM$E: Yahoo chart returned 404
+Skipping AGM$G: Yahoo chart returned 404
+Skipping AGM$D: Yahoo chart returned 404
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Skipping ABR$E: Yahoo chart returned 404
+Skipping ABR$D: Yahoo chart returned 404
+Skipping ABR$F: Yahoo chart returned 404
+Skipping ACHR-W: Yahoo chart returned 404
+Skipping ACR$C: Yahoo chart returned 404
+Skipping ACR$D: Yahoo chart returned 404
+Skipping ACP$A: Yahoo chart returned 404
+Skipping ADC$A: Yahoo chart returned 404
+Skipping AGM$F: Yahoo chart returned 404
+Skipping AGM$D: Yahoo chart returned 404
+Skipping AGM$I: Yahoo chart returned 404
+Skipping AGM$H: Yahoo chart returned 404
+Skipping AGM$E: Yahoo chart returned 404
+Skipping AGM$G: Yahoo chart returned 404
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Skipping ABR$E: Yahoo chart returned 404
+Skipping ABR$D: Yahoo chart returned 404
+Skipping ABR$F: Yahoo chart returned 404
+Skipping ACHR-W: Yahoo chart returned 404
+Skipping ACR$C: Yahoo chart returned 404
+Skipping ACR$D: Yahoo chart returned 404
+Skipping ACP$A: Yahoo chart returned 404
+Skipping ADC$A: Yahoo chart returned 404
+Skipping AGM$G: Yahoo chart returned 404
+Skipping AGM$E: Yahoo chart returned 404
+Skipping AGM$F: Yahoo chart returned 404
+Skipping AGM$H: Yahoo chart returned 404
+Skipping AGM$D: Yahoo chart returned 404
+Skipping AGM$I: Yahoo chart returned 404
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Skipping ABR$E: Yahoo chart returned 404
+Skipping ABR$D: Yahoo chart returned 404
+Skipping ABR$F: Yahoo chart returned 404
+Skipping ACHR-W: Yahoo chart returned 404
+Skipping ACR$D: Yahoo chart returned 404
+Skipping ACP$A: Yahoo chart returned 404
+Skipping ADC$A: Yahoo chart returned 404
+Skipping ACR$C: Yahoo chart returned 404
+Skipping AGM$D: Yahoo chart returned 404
+Skipping AGM$H: Yahoo chart returned 404
+Skipping AGM$F: Yahoo chart returned 404
+Skipping AGM$I: Yahoo chart returned 404
+Skipping AGM$E: Yahoo chart returned 404
+Skipping AGM$G: Yahoo chart returned 404
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Skipping ABR$E: Yahoo chart returned 404
+Skipping ABR$F: Yahoo chart returned 404
+Skipping ABR$D: Yahoo chart returned 404
+Skipping ACP$A: Yahoo chart returned 404
+Skipping ACHR-W: Yahoo chart returned 404
+Skipping ACR$C: Yahoo chart returned 404
+Skipping ACR$D: Yahoo chart returned 404
+Skipping ADC$A: Yahoo chart returned 404
+Skipping AGM$D: Yahoo chart returned 404
+Skipping AGM$G: Yahoo chart returned 404
+Skipping AGM$F: Yahoo chart returned 404
+Skipping AGM$H: Yahoo chart returned 404
+Skipping AGM$I: Yahoo chart returned 404
+Skipping AGM$E: Yahoo chart returned 404
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Skipping ABR$E: Yahoo chart returned 404
+Skipping ABR$F: Yahoo chart returned 404
+Skipping ABR$D: Yahoo chart returned 404
+Skipping ACHR-W: Yahoo chart returned 404
+Skipping ACR$D: Yahoo chart returned 404
+Skipping ACP$A: Yahoo chart returned 404
+Skipping ACR$C: Yahoo chart returned 404
+Skipping ADC$A: Yahoo chart returned 404
+Skipping AGM$D: Yahoo chart returned 404
+Skipping AGM$F: Yahoo chart returned 404
+Skipping AGM$G: Yahoo chart returned 404
+Skipping AGM$I: Yahoo chart returned 404
+Skipping AGM$E: Yahoo chart returned 404
+Skipping AGM$H: Yahoo chart returned 404
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Skipping ABR$E: Yahoo chart returned 404
+Skipping ABR$D: Yahoo chart returned 404
+Skipping ABR$F: Yahoo chart returned 404
 Skipping ACHR-W: Yahoo chart returned 404
 Skipping ACP$A: Yahoo chart returned 404
 Skipping ACR$D: Yahoo chart returned 404
 Skipping ACR$C: Yahoo chart returned 404
 Skipping ADC$A: Yahoo chart returned 404
+Skipping AGM$D: Yahoo chart returned 404
+Skipping AGM$E: Yahoo chart returned 404
+Skipping AGM$I: Yahoo chart returned 404
+Skipping AGM$F: Yahoo chart returned 404
+Skipping AGM$G: Yahoo chart returned 404
+Skipping AGM$H: Yahoo chart returned 404
 Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Skipping ABR$D: Yahoo chart returned 404
+Skipping ABR$F: Yahoo chart returned 404
+Skipping ABR$E: Yahoo chart returned 404
+Skipping ACP$A: Yahoo chart returned 404
+Skipping ACR$C: Yahoo chart returned 404
+Skipping ACHR-W: Yahoo chart returned 404
+Skipping ACR$D: Yahoo chart returned 404
+Skipping ADC$A: Yahoo chart returned 404
 Skipping AGM$E: Yahoo chart returned 404
 Skipping AGM$F: Yahoo chart returned 404
 Skipping AGM$H: Yahoo chart returned 404
-Skipping AGM$D: Yahoo chart returned 404
 Skipping AGM$G: Yahoo chart returned 404
 Skipping AGM$I: Yahoo chart returned 404
+Skipping AGM$D: Yahoo chart returned 404
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Skipping ABR$D: Yahoo chart returned 404
+Skipping ABR$E: Yahoo chart returned 404
+Skipping ABR$F: Yahoo chart returned 404
+Skipping ACHR-W: Yahoo chart returned 404
+Skipping ACP$A: Yahoo chart returned 404
+Skipping ACR$D: Yahoo chart returned 404
+Skipping ACR$C: Yahoo chart returned 404
+Skipping ADC$A: Yahoo chart returned 404
+Skipping AGM$G: Yahoo chart returned 404
+Skipping AGM$D: Yahoo chart returned 404
+Skipping AGM$H: Yahoo chart returned 404
+Skipping AGM$I: Yahoo chart returned 404
+Skipping AGM$E: Yahoo chart returned 404
+Skipping AGM$F: Yahoo chart returned 404
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Skipping ABR$F: Yahoo chart returned 404
+Skipping ABR$D: Yahoo chart returned 404
+Skipping ABR$E: Yahoo chart returned 404
+Skipping ACR$C: Yahoo chart returned 404
+Skipping ACR$D: Yahoo chart returned 404
+Skipping ACHR-W: Yahoo chart returned 404
+Skipping ACP$A: Yahoo chart returned 404
+Skipping ADC$A: Yahoo chart returned 404
+Skipping AGM$D: Yahoo chart returned 404
+Skipping AGM$F: Yahoo chart returned 404
+Skipping AGM$G: Yahoo chart returned 404
+Skipping AGM$H: Yahoo chart returned 404
+Skipping AGM$I: Yahoo chart returned 404
+Skipping AGM$E: Yahoo chart returned 404
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Skipping ABR$D: Yahoo chart returned 404
+Skipping ABR$E: Yahoo chart returned 404
+Skipping ABR$F: Yahoo chart returned 404
+Skipping ACHR-W: Yahoo chart returned 404
+Skipping ACP$A: Yahoo chart returned 404
+Skipping ACR$D: Yahoo chart returned 404
+Skipping ACR$C: Yahoo chart returned 404
+Skipping ADC$A: Yahoo chart returned 404
+Skipping AGM$E: Yahoo chart returned 404
+Skipping AGM$D: Yahoo chart returned 404
+Skipping AGM$H: Yahoo chart returned 404
+Skipping AGM$I: Yahoo chart returned 404
+Skipping AGM$F: Yahoo chart returned 404
+Skipping AGM$G: Yahoo chart returned 404
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Skipping ABR$F: Yahoo chart returned 404
+Skipping ABR$E: Yahoo chart returned 404
+Skipping ABR$D: Yahoo chart returned 404
+Skipping ACHR-W: Yahoo chart returned 404
+Skipping ACP$A: Yahoo chart returned 404
+Skipping ACR$C: Yahoo chart returned 404
+Skipping ACR$D: Yahoo chart returned 404
+Skipping ADC$A: Yahoo chart returned 404
+Skipping AGM$D: Yahoo chart returned 404
+Skipping AGM$E: Yahoo chart returned 404
+Skipping AGM$F: Yahoo chart returned 404
+Skipping AGM$H: Yahoo chart returned 404
+Skipping AGM$I: Yahoo chart returned 404
+Skipping AGM$G: Yahoo chart returned 404
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Skipping ABR$D: Yahoo chart returned 404
+Skipping ABR$E: Yahoo chart returned 404
+Skipping ABR$F: Yahoo chart returned 404
+Skipping ACHR-W: Yahoo chart returned 404
+Skipping ACP$A: Yahoo chart returned 404
+Skipping ACR$C: Yahoo chart returned 404
+Skipping ACR$D: Yahoo chart returned 404
+Skipping ADC$A: Yahoo chart returned 404
+Skipping AGM$E: Yahoo chart returned 404
+Skipping AGM$D: Yahoo chart returned 404
+Skipping AGM$F: Yahoo chart returned 404
+Skipping AGM$G: Yahoo chart returned 404
+Skipping AGM$H: Yahoo chart returned 404
+Skipping AGM$I: Yahoo chart returned 404
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Skipping ABR$E: Yahoo chart returned 404
+Skipping ABR$D: Yahoo chart returned 404
+Skipping ABR$F: Yahoo chart returned 404
+Skipping ACHR-W: Yahoo chart returned 404
+Skipping ACP$A: Yahoo chart returned 404
+Skipping ACR$C: Yahoo chart returned 404
+Skipping ACR$D: Yahoo chart returned 404
+Skipping ADC$A: Yahoo chart returned 404
+Skipping AGM$I: Yahoo chart returned 404
+Skipping AGM$G: Yahoo chart returned 404
+Skipping AGM$E: Yahoo chart returned 404
+Skipping AGM$D: Yahoo chart returned 404
+Skipping AGM$F: Yahoo chart returned 404
+Skipping AGM$H: Yahoo chart returned 404
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Skipping ABR$D: Yahoo chart returned 404
+Skipping ABR$E: Yahoo chart returned 404
+Skipping ABR$F: Yahoo chart returned 404
+Skipping ACHR-W: Yahoo chart returned 404
+Skipping ACP$A: Yahoo chart returned 404
+Skipping ACR$C: Yahoo chart returned 404
+Skipping ACR$D: Yahoo chart returned 404
+Skipping ADC$A: Yahoo chart returned 404
+Skipping AGM$D: Yahoo chart returned 404
+Skipping AGM$I: Yahoo chart returned 404
+Skipping AGM$E: Yahoo chart returned 404
+Skipping AGM$H: Yahoo chart returned 404
+Skipping AGM$G: Yahoo chart returned 404
+Skipping AGM$F: Yahoo chart returned 404
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Skipping ABR$F: Yahoo chart returned 404
+Skipping ABR$E: Yahoo chart returned 404
+Skipping ABR$D: Yahoo chart returned 404
+Skipping ACHR-W: Yahoo chart returned 404
+Skipping ACP$A: Yahoo chart returned 404
+Skipping ACR$C: Yahoo chart returned 404
+Skipping ACR$D: Yahoo chart returned 404
+Skipping ADC$A: Yahoo chart returned 404
+Skipping AGM$D: Yahoo chart returned 404
+Skipping AGM$H: Yahoo chart returned 404
+Skipping AGM$E: Yahoo chart returned 404
+Skipping AGM$G: Yahoo chart returned 404
+Skipping AGM$F: Yahoo chart returned 404
+Skipping AGM$I: Yahoo chart returned 404
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
+Skipping ABR$E: Yahoo chart returned 404
+Skipping ABR$D: Yahoo chart returned 404
+Skipping ABR$F: Yahoo chart returned 404
+Skipping ACP$A: Yahoo chart returned 404
+Skipping ACR$D: Yahoo chart returned 404
+Skipping ACHR-W: Yahoo chart returned 404
+Skipping ACR$C: Yahoo chart returned 404
+Skipping ADC$A: Yahoo chart returned 404
+Skipping AGM$E: Yahoo chart returned 404
+Skipping AGM$F: Yahoo chart returned 404
+Skipping AGM$I: Yahoo chart returned 404
+Skipping AGM$D: Yahoo chart returned 404
+Skipping AGM$H: Yahoo chart returned 404
+Skipping AGM$G: Yahoo chart returned 404
 Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
 Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.
 Yahoo Finance quote endpoint returned 401; falling back to Yahoo chart endpoint.

@@ -12,6 +12,10 @@ const state = {
   sortBy: "changePercent",
   sortDirection: "asc",
   selectedSymbol: null,
+  detailTab: "chart",
+  chartRange: "1d",
+  chartInterval: "1m",
+  showIndicators: false,
   autoRefresh: true,
   isLoading: false,
   nextRefreshAt: null
@@ -32,6 +36,7 @@ let chartState = {
 
 const elements = {
   rows: document.querySelector("#rows"),
+  tableHeaders: document.querySelector("#tableHeaders"),
   status: document.querySelector("#status"),
   watchlistCount: document.querySelector("#watchlistCount"),
   tabs: document.querySelectorAll(".tab"),
@@ -58,10 +63,16 @@ const elements = {
   selectedChange: document.querySelector("#selectedChange"),
   detailsLink: document.querySelector("#detailsLink"),
   chartMeta: document.querySelector("#chartMeta"),
-  priceChart: document.querySelector("#priceChart")
+  priceChart: document.querySelector("#priceChart"),
+  chartTabs: document.querySelectorAll(".chartTab"),
+  rangeButtons: document.querySelectorAll(".rangeButton"),
+  indicatorButton: document.querySelector("#indicatorButton"),
+  detailsPanel: document.querySelector("#detailsPanel"),
+  chartCanvasWrap: document.querySelector(".chartCanvasWrap")
 };
 
 elements.limitSelect.value = String(state.perPage);
+normalizeMarketControls();
 
 elements.tabs.forEach((tab) => {
   tab.classList.toggle("active", tab.dataset.market === state.market);
@@ -71,12 +82,65 @@ elements.tabs.forEach((tab) => {
     state.page = 1;
     state.sector = "";
     state.selectedSymbol = null;
+    normalizeMarketControls();
     history.pushState({}, "", `/?market=${state.market}`);
     elements.tabs.forEach((item) => item.classList.toggle("active", item.dataset.market === state.market));
     updateToolbarMode();
     loadMarket();
   });
 });
+
+function activeSortBy() {
+  return isBrowseMarket(state.market) ? "changePercent" : state.sortBy;
+}
+
+function activeSortDirection() {
+  return isBrowseMarket(state.market) ? "asc" : state.sortDirection;
+}
+
+function normalizeMarketControls() {
+  if (isBrowseMarket(state.market)) {
+    state.sortBy = "changePercent";
+    state.sortDirection = "asc";
+  }
+  renderSortOptions();
+  elements.sortSelect.value = state.sortBy;
+  elements.directionSelect.value = state.sortDirection;
+}
+
+function isBrowseMarket(market) {
+  return market === "us" || market === "india";
+}
+
+function sortOptionsForMarket() {
+  if (state.market === "india" || state.market === "top-india") {
+    return [
+      ["changePercent", "Current change %"],
+      ["price", "Current price"],
+      ["closePrice", "Close price"],
+      ["closeChangePercent", "Close change %"]
+    ];
+  }
+
+  return [
+    ["changePercent", "Current change %"],
+    ["price", "Current price"],
+    ["preMarketPrice", "Pre-market price"],
+    ["postMarketPrice", "Overnight price"],
+    ["preMarketChangePercent", "Pre-market change %"],
+    ["postMarketChangePercent", "Overnight change %"]
+  ];
+}
+
+function renderSortOptions() {
+  const options = sortOptionsForMarket();
+  if (!options.some(([value]) => value === state.sortBy)) {
+    state.sortBy = "changePercent";
+  }
+  elements.sortSelect.innerHTML = options
+    .map(([value, label]) => `<option value="${escapeHtml(value)}">${escapeHtml(label)}</option>`)
+    .join("");
+}
 
 elements.refreshButton?.addEventListener("click", loadMarket);
 elements.searchInput.addEventListener("input", (event) => {
@@ -97,10 +161,12 @@ elements.sectorSelect.addEventListener("change", (event) => {
 });
 elements.sortSelect.addEventListener("change", (event) => {
   state.sortBy = event.target.value;
+  state.page = 1;
   loadMarket();
 });
 elements.directionSelect.addEventListener("change", (event) => {
   state.sortDirection = event.target.value;
+  state.page = 1;
   loadMarket();
 });
 elements.autoRefreshInput.addEventListener("change", (event) => {
@@ -143,6 +209,26 @@ elements.priceChart.addEventListener("mouseleave", () => {
     drawChart(chartState.candles, chartState.row);
   }
 });
+elements.chartTabs.forEach((tab) => {
+  tab.addEventListener("click", () => {
+    state.detailTab = tab.dataset.detailTab || "chart";
+    updateDetailTab();
+  });
+});
+elements.rangeButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    state.chartRange = button.dataset.range || "1d";
+    state.chartInterval = button.dataset.interval || "1m";
+    updateRangeButtons();
+    const row = state.rows.find((item) => item.symbol === state.selectedSymbol);
+    if (row) loadChart(row);
+  });
+});
+elements.indicatorButton.addEventListener("click", () => {
+  state.showIndicators = !state.showIndicators;
+  elements.indicatorButton.classList.toggle("active", state.showIndicators);
+  if (chartState.row) drawChart(chartState.candles, chartState.row);
+});
 
 async function loadMarket() {
   if (state.isLoading) return;
@@ -178,7 +264,7 @@ async function loadMarket() {
     elements.sourceTitle.textContent = payload.source || "--";
     elements.scanTime.textContent = formatDate(payload.scannedAt);
     elements.storageStatus.textContent = describeStorage(payload.storage);
-    if (topMarkets.has(state.market) && payload.activeMetricLabel) {
+    if ((topMarkets.has(state.market) || state.market === "us") && payload.activeMetricLabel) {
       elements.sourceTitle.textContent = `${payload.source || "--"} | ${payload.activeMetricLabel}`;
     }
     elements.status.textContent = state.rows.length
@@ -206,8 +292,8 @@ function apiUrl() {
     const params = new URLSearchParams({
       market,
       sector: state.sector,
-      sortBy: state.sortBy,
-      direction: state.sortDirection
+      sortBy: activeSortBy(),
+      direction: activeSortDirection()
     });
     return `/api/top-market?${params.toString()}`;
   }
@@ -217,8 +303,9 @@ function apiUrl() {
     page: String(state.page),
     perPage: String(state.perPage),
     query: state.search,
-    sortBy: state.sortBy,
-    direction: state.sortDirection
+    sector: isSectorBrowseMarket(state.market) ? state.sector : "",
+    sortBy: activeSortBy(),
+    direction: activeSortDirection()
   });
 
   return `/api/scan?${params.toString()}`;
@@ -229,6 +316,11 @@ function statusText(payload) {
     const cacheNote = payload.cache?.hit ? " Cached while refreshing." : "";
     const sectorNote = payload.sector ? ` in ${payload.sector}` : "";
     return `Top ${state.rows.length}${sectorNote} by ${payload.activeMetricLabel || "selected metric"}.${cacheNote}`;
+  }
+
+  if (state.market === "us" && payload.activeMetricLabel) {
+    const sectorNote = payload.sector ? ` in ${payload.sector}` : "";
+    return `${state.rows.length} rows${sectorNote} with ${payload.activeMetricLabel} from ${formatCompact(payload.total)} matches / ${formatCompact(payload.universeTotal)} symbols.`;
   }
 
   return `${state.rows.length} live rows from ${formatCompact(state.total)} matches / ${formatCompact(state.universeTotal)} symbols.`;
@@ -249,11 +341,10 @@ function scheduleRefresh() {
 }
 
 function renderRows() {
+  renderTableHeaders();
   elements.rows.innerHTML = state.rows.map((row) => {
-    const display = displayMetric(row);
-    const changeClass = valueClass(display.amount);
-    const activeClass = valueClass(display.percent);
     const selectedClass = row.symbol === state.selectedSymbol ? " selected" : "";
+    const metricCells = rowCellsForMarket(row);
     return `
       <tr class="watchRow${selectedClass}" data-symbol="${escapeHtml(row.symbol)}">
         <td class="symbolCell" title="${escapeHtml(row.name)}">
@@ -261,11 +352,7 @@ function renderRows() {
           <span class="tickerText">${escapeHtml(row.symbol)} <span class="sectorText">${escapeHtml(row.sector || row.exchange || "")}</span></span>
         </td>
         <td>${miniSparkline(row)}</td>
-        <td>${formatNumberOrDash(row.price)}</td>
-        <td>${formatNumberOrDash(row.preMarketPrice)}</td>
-        <td>${formatNumberOrDash(row.postMarketPrice)}</td>
-        <td class="${activeClass}">${formatPercentOrDash(display.percent)}</td>
-        <td class="${changeClass}">${formatSignedOrDash(display.amount)}</td>
+        ${metricCells}
       </tr>
     `;
   }).join("");
@@ -278,6 +365,39 @@ function renderRows() {
       updateSelectedPanel();
     });
   });
+}
+
+function renderTableHeaders() {
+  const metricHeaders = isIndianMarket(state.market)
+    ? ["Current Price", "Current %", "Close Price", "Close %"]
+    : ["Current Price", "Current %", "Pre Price", "Pre %", "Overnight", "Overnight %"];
+  elements.tableHeaders.innerHTML = [
+    "Symbol",
+    "Trend",
+    ...metricHeaders
+  ].map((label) => `<th>${escapeHtml(label)}</th>`).join("");
+}
+
+function rowCellsForMarket(row) {
+  if (isIndianMarket(state.market)) {
+    const closePrice = closePriceForRow(row);
+    const closePercent = closeChangePercentForRow(row);
+    return `
+      <td>${formatNumberOrDash(row.price)}</td>
+      <td class="${valueClass(row.changePercent)}">${formatPercentOrDash(row.changePercent)}</td>
+      <td>${formatNumberOrDash(closePrice)}</td>
+      <td class="${valueClass(closePercent)}">${formatPercentOrDash(closePercent)}</td>
+    `;
+  }
+
+  return `
+    <td>${formatNumberOrDash(row.price)}</td>
+    <td class="${valueClass(row.changePercent)}">${formatPercentOrDash(row.changePercent)}</td>
+    <td>${formatNumberOrDash(row.preMarketPrice)}</td>
+    <td class="${valueClass(row.preMarketChangePercent)}">${formatPercentOrDash(row.preMarketChangePercent)}</td>
+    <td>${formatNumberOrDash(row.postMarketPrice)}</td>
+    <td class="${valueClass(row.postMarketChangePercent)}">${formatPercentOrDash(row.postMarketChangePercent)}</td>
+  `;
 }
 
 function updateSelectedPanel() {
@@ -299,21 +419,22 @@ function updateSelectedPanel() {
   elements.selectedChange.textContent = `${formatSignedOrDash(display.amount)} ${formatPercentOrDash(display.percent)}`;
   elements.selectedChange.className = `selectedChange ${valueClass(display.percent)}`;
   elements.detailsLink.href = row.detailUrl || "#";
+  renderDetailsPanel(row);
+  updateDetailTab();
   loadChart(row);
 }
 
 function displayMetric(row) {
-  if (state.sortBy === "preMarketPrice" || state.sortBy === "preMarketChangePercent") {
+  const sortBy = activeSortBy();
+  if (sortBy === "preMarketPrice" || sortBy === "preMarketChangePercent") {
     return {
       price: row.preMarketPrice,
-      amount: numberOrNull(row.preMarketPrice) === null || numberOrNull(row.price) === null
-        ? null
-        : Number(row.preMarketPrice) - Number(row.price),
+      amount: changeAmountFromPercent(row.preMarketPrice, row.preMarketChangePercent),
       percent: row.preMarketChangePercent
     };
   }
 
-  if (state.sortBy === "postMarketPrice" || state.sortBy === "postMarketChangePercent") {
+  if (sortBy === "postMarketPrice" || sortBy === "postMarketChangePercent") {
     return {
       price: row.postMarketPrice,
       amount: numberOrNull(row.postMarketPrice) === null || numberOrNull(row.price) === null
@@ -323,11 +444,42 @@ function displayMetric(row) {
     };
   }
 
+  if (sortBy === "closePrice" || sortBy === "closeChangePercent") {
+    return {
+      price: closePriceForRow(row),
+      amount: row.changeAmount,
+      percent: closeChangePercentForRow(row)
+    };
+  }
+
   return {
     price: row.price,
     amount: row.changeAmount,
     percent: row.activeChangePercent ?? row.changePercent
   };
+}
+
+function closePriceForRow(row) {
+  const rawClose = numberOrNull(row.raw?.previousClose ?? row.raw?.ohlc?.close);
+  if (rawClose !== null) return rawClose;
+
+  const price = numberOrNull(row.price);
+  const changeAmount = numberOrNull(row.changeAmount);
+  if (price !== null && changeAmount !== null) return price - changeAmount;
+  return null;
+}
+
+function closeChangePercentForRow(row) {
+  return numberOrNull(row.raw?.closeChangePercent) ?? numberOrNull(row.changePercent);
+}
+
+function changeAmountFromPercent(price, percent) {
+  const numericPrice = numberOrNull(price);
+  const numericPercent = numberOrNull(percent);
+  if (numericPrice === null || numericPercent === null || numericPercent <= -100) return null;
+
+  const basePrice = numericPrice / (1 + numericPercent / 100);
+  return numericPrice - basePrice;
 }
 
 async function loadChart(row) {
@@ -340,8 +492,8 @@ async function loadChart(row) {
     const params = new URLSearchParams({
       symbol: row.symbol,
       market: state.market,
-      range: "1d",
-      interval: "1m"
+      range: state.chartRange,
+      interval: state.chartInterval
     });
     const response = await fetch(`/api/chart?${params.toString()}`, { signal: chartAbort.signal });
     const payload = await response.json();
@@ -357,10 +509,110 @@ async function loadChart(row) {
 }
 
 function updateToolbarMode() {
-  const isTopMarket = topMarkets.has(state.market);
-  elements.sectorFilterLabel.hidden = !isTopMarket;
-  elements.sectorSelect.disabled = !isTopMarket;
+  const supportsSector = topMarkets.has(state.market) || isSectorBrowseMarket(state.market);
+  const supportsSort = !isBrowseMarket(state.market);
+  elements.sectorFilterLabel.hidden = !supportsSector;
+  elements.sectorSelect.disabled = !supportsSector;
   elements.sectorSelect.value = state.sector;
+  elements.sortFilterLabel.hidden = !supportsSort;
+  elements.orderFilterLabel.hidden = !supportsSort;
+  elements.sortSelect.disabled = !supportsSort;
+  elements.directionSelect.disabled = !supportsSort;
+  normalizeMarketControls();
+}
+
+function isSectorBrowseMarket(market) {
+  return market === "us" || market === "india";
+}
+
+function isIndianMarket(market) {
+  return market === "india" || market === "top-india";
+}
+
+function updateRangeButtons() {
+  elements.rangeButtons.forEach((button) => {
+    button.classList.toggle(
+      "activeRange",
+      button.dataset.range === state.chartRange && button.dataset.interval === state.chartInterval
+    );
+  });
+}
+
+function updateDetailTab() {
+  elements.chartTabs.forEach((tab) => {
+    tab.classList.toggle("active", tab.dataset.detailTab === state.detailTab);
+  });
+
+  const isChart = state.detailTab === "chart";
+  elements.chartCanvasWrap.hidden = !isChart;
+  elements.detailsPanel.hidden = isChart;
+  elements.indicatorButton.disabled = !isChart;
+  if (!isChart) renderDetailsPanel(state.rows.find((item) => item.symbol === state.selectedSymbol));
+}
+
+function renderDetailsPanel(row) {
+  if (!row) {
+    elements.detailsPanel.innerHTML = `<div class="detailEmpty">Select a symbol.</div>`;
+    return;
+  }
+
+  const display = displayMetric(row);
+  const sessionItems = isIndianMarket(state.market)
+    ? [["Close", `${formatNumberOrDash(closePriceForRow(row))} ${formatPercentOrDash(closeChangePercentForRow(row))}`]]
+    : [
+      ["Pre-market", `${formatNumberOrDash(row.preMarketPrice)} ${formatPercentOrDash(row.preMarketChangePercent)}`],
+      ["Overnight", `${formatNumberOrDash(row.postMarketPrice)} ${formatPercentOrDash(row.postMarketChangePercent)}`]
+    ];
+  const panels = {
+    financials: [
+      ["Price", formatNumberOrDash(row.price)],
+      ["Volume", formatCompact(row.volume)],
+      ["Current change", `${formatSignedOrDash(row.changeAmount)} ${formatPercentOrDash(row.changePercent)}`],
+      ...sessionItems,
+      ["Last scan", formatDate(row.scannedAt)]
+    ],
+    valuation: [
+      ["Selected metric", topMetricName()],
+      ["Selected price", formatNumberOrDash(display.price)],
+      ["Selected change", `${formatSignedOrDash(display.amount)} ${formatPercentOrDash(display.percent)}`],
+      ["Signal rank", row.signalRank || "--"],
+      ["Source", row.source || "--"],
+      ["P/E", row.raw?.trailingPE ? formatNumber(row.raw.trailingPE) : "--"]
+    ],
+    profile: [
+      ["Name", row.name || "--"],
+      ["Symbol", row.symbol || "--"],
+      ["Exchange", row.exchange || "--"],
+      ["Sector", row.sector || "--"],
+      ["Type", row.type || row.raw?.quoteType || "--"],
+      ["Details", row.detailUrl ? `<a href="${escapeHtml(row.detailUrl)}" target="_blank" rel="noopener noreferrer">Open details</a>` : "--"]
+    ]
+  };
+
+  const items = panels[state.detailTab] || panels.financials;
+  elements.detailsPanel.innerHTML = `
+    <div class="detailGrid">
+      ${items.map(([label, value]) => `
+        <div class="detailItem">
+          <span>${escapeHtml(label)}</span>
+          <strong>${String(value).startsWith("<a ") ? value : escapeHtml(value)}</strong>
+        </div>
+      `).join("")}
+    </div>
+  `;
+}
+
+function topMetricName() {
+  return {
+    changePercent: "Current change %",
+    price: "Current price",
+    preMarketPrice: "Pre-market price",
+    postMarketPrice: "Overnight price",
+    preMarketChangePercent: "Pre-market change %",
+    postMarketChangePercent: "Overnight change %",
+    closePrice: "Close price",
+    closeChangePercent: "Close change %"
+  }[activeSortBy()] || "Current change %";
 }
 
 function renderSectorOptions() {
@@ -392,6 +644,7 @@ function drawEmptyChart() {
   const { width, height } = canvas.getBoundingClientRect();
   context.clearRect(0, 0, width, height);
   drawGrid(context, width, height, 46, width - 46);
+  chartState = { candles: [], row: null, hoverIndex: null, geometry: null };
 }
 
 function drawChart(candles, row) {
@@ -402,7 +655,7 @@ function drawChart(candles, row) {
   context.clearRect(0, 0, width, height);
 
   if (!candles.length) {
-    drawGrid(context, width, height, 44, 24);
+    drawGrid(context, width, height, 46, width - 46);
     return;
   }
 
@@ -424,6 +677,12 @@ function drawChart(candles, row) {
   const maxVolume = Math.max(...volumes, 1);
   const step = chartWidth / Math.max(visible.length, 1);
   const candleWidth = Math.max(3, Math.min(9, step * 0.58));
+  chartState = {
+    ...chartState,
+    candles,
+    row,
+    geometry: { left, right, priceTop, priceBottom, volumeTop, volumeBottom, low, high, step, visible }
+  };
 
   drawGrid(context, width, height, left, right);
 
@@ -467,6 +726,10 @@ function drawChart(candles, row) {
     context.globalAlpha = 1;
   });
 
+  if (state.showIndicators) {
+    drawMovingAverage(context, visible, { left, step, low, high, priceBottom, priceTop });
+  }
+
   const lastPrice = Number(row.price || visible[visible.length - 1]?.close);
   if (Number.isFinite(lastPrice)) {
     const y = scale(lastPrice, low, high, priceBottom, priceTop);
@@ -487,6 +750,80 @@ function drawChart(candles, row) {
   context.textAlign = "left";
   context.fillStyle = "#cfe0f6";
   context.fillText(`Volume ${formatCompact(visible[visible.length - 1]?.volume)}`, left, volumeTop - 9);
+
+  if (Number.isInteger(chartState.hoverIndex)) {
+    drawCrosshair(context, chartState.hoverIndex);
+  }
+}
+
+function handleChartHover(event) {
+  if (!chartState.geometry?.visible?.length) return;
+  const rect = elements.priceChart.getBoundingClientRect();
+  const x = event.clientX - rect.left;
+  const { left, right, step, visible } = chartState.geometry;
+  if (x < left || x > right) return;
+  const index = clamp(Math.round((x - left - step / 2) / step), 0, visible.length - 1);
+  chartState.hoverIndex = index;
+  const candle = visible[index];
+  elements.chartMeta.textContent = candleMetaText(candle);
+  drawChart(chartState.candles, chartState.row);
+}
+
+function drawCrosshair(context, index) {
+  const { left, right, priceTop, volumeBottom, low, high, priceBottom, step, visible } = chartState.geometry;
+  const candle = visible[index];
+  const x = left + index * step + step / 2;
+  const y = scale(candle.close, low, high, priceBottom, priceTop);
+
+  context.save();
+  context.strokeStyle = "rgba(205, 220, 240, 0.7)";
+  context.lineWidth = 1;
+  context.setLineDash([3, 5]);
+  context.beginPath();
+  context.moveTo(x, priceTop);
+  context.lineTo(x, volumeBottom);
+  context.moveTo(left, y);
+  context.lineTo(right, y);
+  context.stroke();
+  context.setLineDash([]);
+
+  context.fillStyle = "#d7e6fb";
+  context.fillRect(right + 4, y - 10, 46, 20);
+  context.fillStyle = "#07101a";
+  context.textAlign = "center";
+  context.textBaseline = "middle";
+  context.fillText(formatNumber(candle.close), right + 27, y);
+  context.restore();
+}
+
+function drawMovingAverage(context, visible, geometry) {
+  const period = 20;
+  const points = [];
+  for (let index = 0; index < visible.length; index += 1) {
+    const slice = visible.slice(Math.max(0, index - period + 1), index + 1);
+    if (slice.length < Math.min(period, index + 1)) continue;
+    const avg = slice.reduce((sum, candle) => sum + Number(candle.close), 0) / slice.length;
+    points.push({
+      x: geometry.left + index * geometry.step + geometry.step / 2,
+      y: scale(avg, geometry.low, geometry.high, geometry.priceBottom, geometry.priceTop)
+    });
+  }
+
+  if (points.length < 2) return;
+  context.save();
+  context.strokeStyle = "#f2b94b";
+  context.lineWidth = 1.5;
+  context.beginPath();
+  points.forEach((point, index) => {
+    if (index === 0) context.moveTo(point.x, point.y);
+    else context.lineTo(point.x, point.y);
+  });
+  context.stroke();
+  context.restore();
+}
+
+function candleMetaText(candle) {
+  return `${formatChartTime(candle.time)}  O ${formatNumberOrDash(candle.open)}  H ${formatNumberOrDash(candle.high)}  L ${formatNumberOrDash(candle.low)}  C ${formatNumberOrDash(candle.close)}  Vol ${formatCompact(candle.volume)}`;
 }
 
 function drawGrid(context, width, height, left, right) {
@@ -610,6 +947,16 @@ function formatDate(value) {
   }).format(new Date(value));
 }
 
+function formatChartTime(value) {
+  if (!value) return "--";
+  return new Intl.DateTimeFormat(undefined, {
+    hour: "numeric",
+    minute: "2-digit",
+    month: "short",
+    day: "numeric"
+  }).format(new Date(value));
+}
+
 function formatNumber(value) {
   return new Intl.NumberFormat(undefined, {
     maximumFractionDigits: value < 1 ? 6 : 2
@@ -644,6 +991,10 @@ function formatSignedOrDash(value) {
 function round(value, places) {
   const factor = 10 ** places;
   return Math.round(Number(value) * factor) / factor;
+}
+
+function clamp(value, min, max) {
+  return Math.min(Math.max(value, min), max);
 }
 
 function valueClass(value) {

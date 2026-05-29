@@ -15,11 +15,11 @@
     </header>
 
     <nav class="tabs" aria-label="Markets">
-      <a class="tab" href="/?market=top-us" data-market="top-us">My Top US Stocks</a>
+      <a class="tab active" href="/?market=us" data-market="us">All US Stocks/ETFs</a>
+      <a class="tab" href="/?market=top-us" data-market="top-us">Top US Stocks</a>
+      <a class="tab" href="/?market=india" data-market="india">All Indian Stocks</a>
       <a class="tab" href="/?market=top-india" data-market="top-india">My Top Indian Stocks</a>
       <a class="tab" href="/?market=top-crypto" data-market="top-crypto">My Top Crypto</a>
-      <a class="tab active" href="/?market=us" data-market="us">US Stocks</a>
-      <a class="tab" href="/?market=india" data-market="india">Indian Stocks</a>
       <a class="tab" href="/?market=crypto" data-market="crypto">Crypto</a>
     </nav>
 
@@ -100,19 +100,25 @@
           <div class="tableWrap">
             <table>
               <thead>
-                <tr>
+                <tr id="tableHeaders">
                   <th>Symbol</th>
                   <th>Trend</th>
-                  <th>Price</th>
-                  <th>Pre</th>
+                  <th>Current Price</th>
+                  <th>Current %</th>
+                  <th>Pre Price</th>
+                  <th>Pre %</th>
                   <th>Overnight</th>
-                  <th>% Chg</th>
-                  <th>Chg</th>
+                  <th>Overnight %</th>
                 </tr>
               </thead>
               <tbody id="rows"></tbody>
             </table>
           </div>
+          <section class="pagination" aria-label="Pagination">
+            <button id="prevPageButton" type="button">Previous</button>
+            <span id="pageInfo">Page 1</span>
+            <button id="nextPageButton" type="button">Next</button>
+          </section>
         </aside>
 
         <section class="chartPanel">
@@ -126,33 +132,29 @@
           </div>
 
           <nav class="chartTabs" aria-label="Symbol details">
-            <span class="chartTab active">Chart</span>
-            <span class="chartTab">Financials</span>
-            <span class="chartTab">Valuation</span>
-            <span class="chartTab">Profile</span>
+            <button class="chartTab active" type="button" data-detail-tab="chart">Chart</button>
+            <button class="chartTab" type="button" data-detail-tab="financials">Financials</button>
+            <button class="chartTab" type="button" data-detail-tab="valuation">Valuation</button>
+            <button class="chartTab" type="button" data-detail-tab="profile">Profile</button>
           </nav>
 
           <div class="chartToolbar">
-            <span>Indicators</span>
-            <span class="activeRange">1D</span>
-            <span>1M</span>
-            <span>3M</span>
-            <span>6M</span>
-            <span>1Y</span>
+            <button id="indicatorButton" class="toolbarButton" type="button">Indicators</button>
+            <button class="rangeButton activeRange" type="button" data-range="1d" data-interval="1m">1D</button>
+            <button class="rangeButton" type="button" data-range="1mo" data-interval="1d">1M</button>
+            <button class="rangeButton" type="button" data-range="3mo" data-interval="1d">3M</button>
+            <button class="rangeButton" type="button" data-range="6mo" data-interval="1d">6M</button>
+            <button class="rangeButton" type="button" data-range="1y" data-interval="1d">1Y</button>
           </div>
 
           <div id="chartMeta" class="chartMeta">Select a symbol to view the chart.</div>
           <div class="chartCanvasWrap">
             <canvas id="priceChart" width="980" height="520"></canvas>
           </div>
+          <div id="detailsPanel" class="detailsPanel" hidden></div>
         </section>
       </section>
 
-      <section class="pagination" aria-label="Pagination">
-        <button id="prevPageButton" type="button">Previous</button>
-        <span id="pageInfo">Page 1</span>
-        <button id="nextPageButton" type="button">Next</button>
-      </section>
     </main>
 
     <script src="/app.js" type="module"></script>

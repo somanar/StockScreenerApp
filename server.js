@@ -1,4 +1,5 @@
 import http from "node:http";
+import https from "node:https";
 import { existsSync, readFileSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { extname, join, normalize } from "node:path";
@@ -23,6 +24,7 @@ const TOP_CACHE_MS = Number(process.env.TOP_CACHE_MS || 30_000);
 const TOP_STALE_MS = Number(process.env.TOP_STALE_MS || 300_000);
 const DATA_REFRESH_MS = Number(process.env.DATA_REFRESH_MS || 30_000);
 const BACKGROUND_MARKET_PAGES = Number(process.env.BACKGROUND_MARKET_PAGES || 3);
+const US_SESSION_FILTER_CACHE_MS = Number(process.env.US_SESSION_FILTER_CACHE_MS || 120_000);
 const backgroundRefreshState = {
   running: false,
   lastStartedAt: null,
@@ -30,6 +32,7 @@ const backgroundRefreshState = {
   lastError: null
 };
 const topMarketCache = new Map();
+const usSessionFilterCache = new Map();
 
 const contentTypes = {
   ".html": "text/html; charset=utf-8",
@@ -41,13 +44,13 @@ const contentTypes = {
 
 const marketConfig = {
   us: {
-    title: "US Exchanges",
+    title: "All US Stocks/ETFs",
     universeFile: "us-symbols.json",
     source: "Yahoo Finance",
-    quoteProvider: fetchYahooQuotes
+    quoteProvider: fetchYahooChartQuotes
   },
   india: {
-    title: "Indian Exchanges",
+    title: "All Indian Stocks",
     universeFile: "india-symbols.json",
     source: "Yahoo Finance / Kite",
     quoteProvider: fetchIndiaQuotes
@@ -123,21 +126,27 @@ async function handleScan(url, res) {
   const page = clamp(Number(url.searchParams.get("page") || 1), 1, 1_000_000);
   const perPage = clamp(Number(url.searchParams.get("perPage") || url.searchParams.get("limit") || DEFAULT_PAGE_SIZE), 1, MAX_PAGE_SIZE);
   const query = (url.searchParams.get("query") || "").trim();
-  const sortBy = url.searchParams.get("sortBy") || "changePercent";
+  const sector = normalizeSector(url.searchParams.get("sector") || "");
+  const sortBy = normalizeTopSortBy(url.searchParams.get("sortBy") || "changePercent");
   const sortDirection = url.searchParams.get("direction") || "asc";
   const startedAt = new Date();
+  const universe = config.universeFile ? await loadUniverse(config.universeFile).catch(() => []) : [];
+  const sectorOptions = market === "us" || market === "india" ? sectorList(universe) : [];
 
-  const stored = await readStoredSignals({
-    market,
-    page,
-    perPage,
-    query,
-    sortBy,
-    sortDirection
-  }).catch((error) => {
-    console.warn(`Supabase read failed for ${market}: ${error.message}`);
-    return null;
-  });
+  const stored = shouldUseStoredScanRows({ market, query })
+    ? await readStoredSignals({
+      market,
+      page,
+      perPage,
+      query,
+      sector,
+      sortBy,
+      sortDirection
+    }).catch((error) => {
+      console.warn(`Supabase read failed for ${market}: ${error.message}`);
+      return null;
+    })
+    : null;
 
   if (stored?.rows?.length) {
     sendJson(res, {
@@ -151,14 +160,42 @@ async function handleScan(url, res) {
       perPage,
       totalPages: Math.max(1, Math.ceil(stored.total / perPage)),
       universeTotal: stored.total,
+      sectors: sectorOptions,
+      sector,
+      activeMetric: stored.activeMetric,
+      activeMetricLabel: stored.activeMetricLabel,
       storage: { enabled: true, source: "Supabase snapshot", refreshedAt: stored.scannedAt },
       rows: stored.rows
     });
     return;
   }
 
-  const scan = await scanMarket(market, config, { page, perPage, query, sortBy, sortDirection });
+  const scan = await scanMarket(market, config, { page, perPage, query, sector, sortBy, sortDirection, universe });
   const rows = scan.rows;
+  if (market === "us" && usesSparseUsSessionFilter(sortBy) && !query && !rows.length) {
+    const fallback = await readStoredSignals({ market, page, perPage, query, sector, sortBy, sortDirection }).catch(() => null);
+    if (fallback?.rows?.length) {
+      sendJson(res, {
+        market,
+        title: config.title,
+        source: fallback.rows[0]?.source || config.source,
+        scannedAt: fallback.scannedAt || startedAt.toISOString(),
+        count: fallback.rows.length,
+        total: fallback.total,
+        page,
+        perPage,
+        totalPages: Math.max(1, Math.ceil(fallback.total / perPage)),
+        universeTotal: scan.universeTotal,
+        sectors: sectorOptions,
+        sector,
+        activeMetric: fallback.activeMetric,
+        activeMetricLabel: fallback.activeMetricLabel,
+        storage: { enabled: true, source: "Supabase snapshot fallback", refreshedAt: fallback.scannedAt },
+        rows: fallback.rows
+      });
+      return;
+    }
+  }
   const storage = await storeSignals(rows);
 
   sendJson(res, {
@@ -172,6 +209,10 @@ async function handleScan(url, res) {
     perPage: scan.perPage,
     totalPages: scan.totalPages,
     universeTotal: scan.universeTotal,
+    sectors: sectorOptions,
+    sector,
+    activeMetric: market === "us" ? normalizeTopSortBy(sortBy) : null,
+    activeMetricLabel: market === "us" ? topMetricLabel(normalizeTopSortBy(sortBy)) : null,
     storage,
     rows
   });
@@ -226,10 +267,15 @@ async function handleTopMarket(topMarket, sector, sortBy, sortDirection, res) {
   sendJson(res, { ...filterTopMarketPayload(payload, { sector, sortBy, sortDirection }), cache: { hit: false, stale: false, ageMs: 0 } });
 }
 
+function shouldUseStoredScanRows({ market, query }) {
+  if (market === "us" || market === "india") return Boolean(query);
+  return true;
+}
+
 async function handleChart(url, res) {
   const symbol = (url.searchParams.get("symbol") || "").trim();
-  const range = url.searchParams.get("range") || "6mo";
-  const interval = url.searchParams.get("interval") || "1d";
+  const range = url.searchParams.get("range") || "1d";
+  const interval = url.searchParams.get("interval") || "1m";
 
   if (!symbol) {
     sendJson(res, { error: "Missing symbol." }, 400);
@@ -415,10 +461,10 @@ function normalizeTopMarket(topMarket) {
 
 function topMarketTitle(topMarket) {
   return {
-    "top-us": "My Top US Stocks",
+    "top-us": "Top US Stocks",
     "top-india": "My Top Indian Stocks",
     "top-crypto": "My Top Crypto"
-  }[topMarket] || "My Top US Stocks";
+  }[topMarket] || "Top US Stocks";
 }
 
 function topMarketSource(topMarket) {
@@ -430,12 +476,17 @@ function topMarketSource(topMarket) {
 }
 
 async function scanMarket(market, config, options) {
-  const universe = config.universeFile ? await loadUniverse(config.universeFile) : [];
+  const universe = options.universe || (config.universeFile ? await loadUniverse(config.universeFile) : []);
   const universeTotal = universe.length;
-  const filteredUniverse = universe.length ? filterUniverse(universe, options.query) : [];
+  const sectorFilteredUniverse = filterUniverseBySector(universe, options.sector);
+  const filteredUniverse = sectorFilteredUniverse.length ? filterUniverse(sectorFilteredUniverse, options.query) : [];
   let quoteUniverse = filteredUniverse;
   let quotes;
   let total;
+
+  if (market === "us" && universe.length && !options.query && usesSparseUsSessionFilter(options.sortBy)) {
+    return scanSparseUsSessionMarket(config, filteredUniverse, universeTotal, options);
+  }
 
   if (universe.length) {
     total = filteredUniverse.length;
@@ -444,42 +495,60 @@ async function scanMarket(market, config, options) {
     if (market === "india") {
       quotes = await enrichIndianPreOpen(quotes);
     }
+    if (market === "us" && isOvernightSort(options.sortBy)) {
+      quotes = await enrichUsOvernightRows(quotes);
+    }
   } else {
     const allQuotes = await config.quoteProvider(universe);
     const filteredQuotes = filterQuotes(allQuotes, options.query);
     total = filteredQuotes.length;
     quotes = paginate(filteredQuotes, options.page, options.perPage);
+    if (market === "us" && isOvernightSort(options.sortBy)) {
+      quotes = await enrichUsOvernightRows(quotes);
+    }
   }
 
   const now = new Date().toISOString();
   const startRank = (options.page - 1) * options.perPage;
+  const metricFilteredQuotes = filterScanMetricRows(
+    quotes.filter((quote) => Number.isFinite(quote.price) && Number.isFinite(quote.changePercent)),
+    market,
+    options.sortBy
+  );
   const totalPages = Math.max(1, Math.ceil(total / options.perPage));
 
-  const rows = quotes
-    .filter((quote) => Number.isFinite(quote.price) && Number.isFinite(quote.changePercent))
+  const rows = metricFilteredQuotes
     .sort((a, b) => compareQuoteValues(a, b, options.sortBy, options.sortDirection))
-    .map((quote, index) => ({
-      market,
-      symbol: quote.symbol,
-      name: quote.name || quote.symbol,
-      exchange: quote.exchange || market.toUpperCase(),
-      sector: quote.sector || findUniverseValue(quoteUniverse, quote.symbol, "sector") || null,
-      type: quote.type || findUniverseValue(quoteUniverse, quote.symbol, "type") || null,
-      detailUrl: quote.detailUrl || detailUrlForQuote(market, quote),
-      price: round(quote.price, 6),
-      preMarketPrice: nullableRound(quote.preMarketPrice, 6),
-      postMarketPrice: nullableRound(quote.postMarketPrice, 6),
-      changeAmount: round(quote.changeAmount || 0, 6),
-      changePercent: round(quote.changePercent, 4),
-      preMarketChangePercent: nullableRound(quote.preMarketChangePercent, 4),
-      postMarketChangePercent: nullableRound(quote.postMarketChangePercent, 4),
-      activeChangePercent: null,
-      volume: quote.volume || 0,
-      signalRank: startRank + index + 1,
-      source: quote.source || config.source,
-      scannedAt: now,
-      raw: quote.raw || null
-    }));
+    .map((quote, index) => {
+      const closePrice = closePriceForQuote(quote);
+      return {
+        market,
+        symbol: quote.symbol,
+        name: quote.name || quote.symbol,
+        exchange: quote.exchange || market.toUpperCase(),
+        sector: quote.sector || findUniverseValue(quoteUniverse, quote.symbol, "sector") || null,
+        type: quote.type || findUniverseValue(quoteUniverse, quote.symbol, "type") || null,
+        detailUrl: quote.detailUrl || detailUrlForQuote(market, quote),
+        price: round(quote.price, 6),
+        closePrice: nullableRound(closePrice, 6),
+        preMarketPrice: nullableRound(quote.preMarketPrice, 6),
+        postMarketPrice: nullableRound(quote.postMarketPrice, 6),
+        changeAmount: round(quote.changeAmount || 0, 6),
+        changePercent: round(quote.changePercent, 4),
+        closeChangePercent: nullableRound(quote.closeChangePercent ?? quote.changePercent, 4),
+        preMarketChangePercent: nullableRound(quote.preMarketChangePercent, 4),
+        postMarketChangePercent: nullableRound(quote.postMarketChangePercent, 4),
+        activeChangePercent: null,
+        volume: quote.volume || 0,
+        signalRank: startRank + index + 1,
+        source: quote.source || config.source,
+        scannedAt: now,
+        raw: {
+          ...(quote.raw || {}),
+          previousClose: quote.raw?.previousClose ?? closePrice ?? null
+        }
+      };
+    });
 
   return {
     rows,
@@ -487,6 +556,85 @@ async function scanMarket(market, config, options) {
     perPage: options.perPage,
     total,
     totalPages,
+    universeTotal,
+    universeRows: sectorFilteredUniverse
+  };
+}
+
+async function scanSparseUsSessionMarket(config, universe, universeTotal, options) {
+  const targetStart = (options.page - 1) * options.perPage;
+  const targetEnd = targetStart + options.perPage;
+  const chunkSize = Math.max(options.perPage, MAX_PAGE_SIZE);
+  const cacheKey = usSessionFilterCacheKey(options.sortBy, options.sector);
+  const cached = usSessionFilterCache.get(cacheKey);
+  const cacheAge = cached ? Date.now() - cached.cachedAt : Infinity;
+  const cache = cached && cacheAge < US_SESSION_FILTER_CACHE_MS
+    ? cached
+    : { matches: [], cursor: 0, scanned: 0, cachedAt: Date.now() };
+
+  while (cache.matches.length < targetEnd && cache.cursor < universe.length) {
+    const quoteUniverse = universe.slice(cache.cursor, cache.cursor + chunkSize);
+    cache.cursor += chunkSize;
+    cache.scanned += quoteUniverse.length;
+
+    let quotes = await config.quoteProvider(quoteUniverse);
+    if (!quotes.length) break;
+    if (isOvernightSort(options.sortBy)) {
+      quotes = await enrichUsOvernightRows(quotes);
+    }
+
+    const chunkMatches = filterScanMetricRows(
+      quotes.filter((quote) => Number.isFinite(quote.price) && Number.isFinite(quote.changePercent)),
+      "us",
+      options.sortBy
+    );
+    cache.matches.push(...chunkMatches);
+    cache.cachedAt = Date.now();
+    if (cache.matches.length) usSessionFilterCache.set(cacheKey, cache);
+  }
+
+  if (!cache.matches.length) usSessionFilterCache.delete(cacheKey);
+
+  const now = new Date().toISOString();
+  const pageMatches = cache.matches
+    .slice(targetStart, targetEnd)
+    .sort((a, b) => compareQuoteValues(a, b, options.sortBy, options.sortDirection));
+
+  const rows = pageMatches.map((quote, index) => ({
+    market: "us",
+    symbol: quote.symbol,
+    name: quote.name || quote.symbol,
+    exchange: quote.exchange || "US",
+    sector: quote.sector || findUniverseValue(universe, quote.symbol, "sector") || null,
+    type: quote.type || findUniverseValue(universe, quote.symbol, "type") || null,
+    detailUrl: quote.detailUrl || detailUrlForQuote("us", quote),
+    price: round(quote.price, 6),
+    preMarketPrice: nullableRound(quote.preMarketPrice, 6),
+    postMarketPrice: nullableRound(quote.postMarketPrice, 6),
+    changeAmount: round(quote.changeAmount || 0, 6),
+    changePercent: round(quote.changePercent, 4),
+    preMarketChangePercent: nullableRound(quote.preMarketChangePercent, 4),
+    postMarketChangePercent: nullableRound(quote.postMarketChangePercent, 4),
+    activeChangePercent: null,
+    volume: quote.volume || 0,
+    signalRank: targetStart + index + 1,
+    source: quote.source || config.source,
+    scannedAt: now,
+    raw: {
+      ...(quote.raw || {}),
+      sparseFilter: options.sortBy,
+      sparseCacheAgeMs: cacheAge === Infinity ? 0 : cacheAge,
+      sparseCacheHit: Boolean(cached && cacheAge < US_SESSION_FILTER_CACHE_MS),
+      sparseScannedSymbols: cache.scanned
+    }
+  }));
+
+  return {
+    rows,
+    page: options.page,
+    perPage: options.perPage,
+    total: universe.length,
+    totalPages: Math.max(1, Math.ceil(universe.length / options.perPage)),
     universeTotal
   };
 }
@@ -525,7 +673,7 @@ async function scanTopUsStocks() {
     rows,
     candidateCount: candidates.length,
     market: "top-us",
-    title: "My Top US Stocks",
+    title: "Top US Stocks",
     source: "Yahoo Finance",
     activeMetric: "changePercent",
     activeMetricLabel: session.metricLabel,
@@ -659,6 +807,7 @@ async function scanTopCrypto() {
 
 function topYahooRow({ quote, index, market, exchangeFallback, fallbackSector, session, now }) {
   const metric = session.metric;
+  const closePrice = closePriceForQuote(quote);
   return {
     market,
     symbol: quote.symbol,
@@ -668,10 +817,12 @@ function topYahooRow({ quote, index, market, exchangeFallback, fallbackSector, s
     type: quote.type || "Stock",
     detailUrl: quote.detailUrl || yahooDetailUrl(quote.symbol),
     price: round(quote.price, 6),
+    closePrice: nullableRound(closePrice, 6),
     preMarketPrice: nullableRound(quote.preMarketPrice, 6),
     postMarketPrice: nullableRound(quote.postMarketPrice, 6),
     changeAmount: round(quote.changeAmount || 0, 6),
     changePercent: round(quote.changePercent, 4),
+    closeChangePercent: nullableRound(quote.closeChangePercent ?? quote.changePercent, 4),
     preMarketChangePercent: nullableRound(quote.preMarketChangePercent, 4),
     postMarketChangePercent: nullableRound(quote.postMarketChangePercent, 4),
     activeChangePercent: nullableRound(quote[metric], 4),
@@ -683,6 +834,8 @@ function topYahooRow({ quote, index, market, exchangeFallback, fallbackSector, s
     scannedAt: now,
     raw: {
       ...quote.raw,
+      previousClose: quote.raw?.previousClose ?? closePrice ?? null,
+      closeChangePercent: quote.raw?.closeChangePercent ?? quote.closeChangePercent ?? quote.changePercent ?? null,
       marketPhase: session.phase,
       activeMetric: metric
     }
@@ -726,10 +879,12 @@ async function fetchYahooQuotes(universe) {
           type: findUniverseValue(universe, result.symbol, "type"),
           detailUrl: yahooDetailUrl(result.symbol),
           price: Number(result.regularMarketPrice),
+          closePrice: Number.isFinite(previousClose) ? previousClose : null,
           preMarketPrice,
           postMarketPrice,
           changeAmount: Number(result.regularMarketChange),
           changePercent: Number(result.regularMarketChangePercent),
+          closeChangePercent: Number(result.regularMarketChangePercent),
           preMarketChangePercent: preMarketPrice === null ? null : numberOrNull(result.preMarketChangePercent),
           postMarketChangePercent: postMarketPrice === null ? null : percentChange(postMarketPrice, regularPrice),
           volume: Number(result.regularMarketVolume || result.averageDailyVolume3Month || 0),
@@ -737,6 +892,8 @@ async function fetchYahooQuotes(universe) {
           raw: {
             currency: result.currency,
             marketState: result.marketState,
+            previousClose: Number.isFinite(previousClose) ? previousClose : null,
+            closeChangePercent: Number(result.regularMarketChangePercent),
             quoteType: result.quoteType
           }
         });
@@ -803,10 +960,12 @@ async function fetchKiteQuotes(universe) {
         type: universeRow?.type || "Stock",
         detailUrl: yahooDetailUrl(universeRow?.symbol || `${nativeSymbol}.NS`),
         price,
+        closePrice: Number.isFinite(previousClose) ? previousClose : null,
         preMarketPrice: null,
         postMarketPrice: null,
         changeAmount,
         changePercent,
+        closeChangePercent: changePercent,
         preMarketChangePercent: null,
         postMarketChangePercent: null,
         volume: Number(quote.volume || 0),
@@ -814,6 +973,8 @@ async function fetchKiteQuotes(universe) {
         raw: {
           instrument,
           mode: "quote",
+          previousClose: Number.isFinite(previousClose) ? previousClose : null,
+          closeChangePercent: changePercent,
           ohlc: quote.ohlc
         }
       });
@@ -1006,7 +1167,9 @@ async function fetchYahooChartQuote(item) {
   const changeAmount = price - previousClose;
   const changePercent = previousClose ? (changeAmount / previousClose) * 100 : 0;
   const marketState = normalizeMarketPhase(meta.marketState || inferMarketState(result, periods));
-  const preMarketPrice = distinctSessionPrice(meta.preMarketPrice, previousClose);
+  const priorPreMarketPrice = latestTradingPeriodClose(result, "pre");
+  const preMarketPrice = distinctSessionPrice(meta.preMarketPrice, previousClose)
+    || distinctSessionPrice(priorPreMarketPrice, previousClose);
   const overnightPrice = latestTradingPeriodClose(result, "post");
   const postMarketPrice = distinctSessionPrice(meta.postMarketPrice, price)
     || distinctSessionPrice(overnightPrice, price);
@@ -1031,6 +1194,7 @@ async function fetchYahooChartQuote(item) {
       currency: meta.currency,
       hasPrePostMarketData: meta.hasPrePostMarketData || false,
       marketState,
+      priorPreMarketPrice,
       overnightPrice,
       quoteType: meta.instrumentType
     }
@@ -1075,6 +1239,131 @@ async function fetchYahooHistoricalChart(symbol, { range, interval }) {
     lastPrice: candles.at(-1)?.close ?? null,
     candles
   };
+}
+
+async function enrichUsOvernightRows(rows) {
+  const enriched = [];
+  let cursor = 0;
+  const concurrency = Math.min(8, Math.max(1, rows.length));
+
+  async function worker() {
+    while (cursor < rows.length) {
+      const index = cursor;
+      cursor += 1;
+      enriched[index] = await enrichUsOvernightRow(rows[index]);
+    }
+  }
+
+  await Promise.all(Array.from({ length: concurrency }, worker));
+  return enriched;
+}
+
+async function enrichUsOvernightRow(row) {
+  try {
+    const quote = await fetchYahooEmbeddedQuote(row.symbol);
+    const overnightPrice = rawYahooNumber(quote?.overnightMarketPrice);
+    const overnightChangePercent = rawYahooNumber(quote?.overnightMarketChangePercent);
+    const overnightChange = rawYahooNumber(quote?.overnightMarketChange);
+
+    if (!sessionPriceIsDistinct(overnightPrice, row.price) || !hasMeaningfulPercent(overnightChangePercent)) {
+      return {
+        ...row,
+        postMarketPrice: null,
+        postMarketChangePercent: null,
+        raw: {
+          ...(row.raw || {}),
+          overnightMarketPrice: overnightPrice,
+          overnightMarketSource: "Yahoo embedded quote",
+          overnightMarketUnavailable: true
+        }
+      };
+    }
+
+    return {
+      ...row,
+      postMarketPrice: overnightPrice,
+      postMarketChangePercent: overnightChangePercent,
+      raw: {
+        ...(row.raw || {}),
+        overnightMarketPrice: overnightPrice,
+        overnightMarketChange: overnightChange,
+        overnightMarketChangePercent: overnightChangePercent,
+        overnightMarketTime: rawYahooNumber(quote?.overnightMarketTime),
+        overnightMarketSource: "Yahoo embedded quote"
+      }
+    };
+  } catch {
+    return row;
+  }
+}
+
+async function fetchYahooEmbeddedQuote(symbol) {
+  const html = await httpsGetText(`https://finance.yahoo.com/quote/${encodeURIComponent(symbol)}/`, {
+    ...yahooHeaders(),
+    "Accept": "text/html,application/xhtml+xml"
+  });
+  return extractYahooEmbeddedQuote(html, symbol);
+}
+
+function extractYahooEmbeddedQuote(html, symbol) {
+  const markerIndex = html.indexOf("overnightMarketPrice");
+  if (markerIndex < 0) return null;
+
+  const scriptStart = html.lastIndexOf("<script", markerIndex);
+  const contentStart = html.indexOf(">", scriptStart);
+  const scriptEnd = html.indexOf("</script>", contentStart);
+  if (scriptStart < 0 || contentStart < 0 || scriptEnd < 0) return null;
+
+  const scriptBody = decodeHtmlEntities(html.slice(contentStart + 1, scriptEnd));
+  const outer = JSON.parse(scriptBody);
+  const inner = JSON.parse(outer.body || "{}");
+  const quotes = inner?.quoteResponse?.result || [];
+  return quotes.find((quote) => quote.symbol === symbol) || quotes[0] || null;
+}
+
+function decodeHtmlEntities(value) {
+  return String(value || "")
+    .replace(/&quot;/g, "\"")
+    .replace(/&#34;/g, "\"")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">");
+}
+
+function rawYahooNumber(value) {
+  const raw = value && typeof value === "object" && "raw" in value ? value.raw : value;
+  return numberOrNull(raw);
+}
+
+function httpsGetText(url, headers, redirects = 0) {
+  return new Promise((resolve, reject) => {
+    const request = https.get(url, { headers, maxHeaderSize: 128 * 1024 }, (response) => {
+      const location = response.headers.location;
+      if ([301, 302, 303, 307, 308].includes(response.statusCode) && location && redirects < 3) {
+        response.resume();
+        resolve(httpsGetText(new URL(location, url).toString(), headers, redirects + 1));
+        return;
+      }
+
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        response.resume();
+        reject(new Error(`GET ${url} returned ${response.statusCode}`));
+        return;
+      }
+
+      let body = "";
+      response.setEncoding("utf8");
+      response.on("data", (chunk) => {
+        body += chunk;
+      });
+      response.on("end", () => resolve(body));
+    });
+
+    request.setTimeout(15_000, () => {
+      request.destroy(new Error(`GET ${url} timed out`));
+    });
+    request.on("error", reject);
+  });
 }
 
 async function fetchHyperliquidCrypto(universe = []) {
@@ -1241,22 +1530,43 @@ async function storeSignals(rows) {
   return { enabled: true, inserted: rows.length };
 }
 
-async function readStoredSignals({ market, page, perPage, query, sortBy, sortDirection }) {
+async function readStoredSignals({ market, page, perPage, query, sector, sortBy, sortDirection }) {
   if (!isSupabaseConfigured()) return null;
 
   const rows = await fetchStoredRows(market);
   if (!rows.length) return null;
 
-  const filtered = filterStoredRows(rows, query);
-  const sorted = filtered.sort((a, b) => compareQuoteValues(a, b, sortBy, sortDirection));
-  const pageRows = paginate(sorted, page, perPage).map((row, index) => ({
+  const normalizedSortBy = normalizeTopSortBy(sortBy);
+  const sectorFiltered = filterRowsBySector(rows, sector);
+  const filtered = filterStoredRows(sectorFiltered, query);
+  if (hasStaleUsOvernightRows(market, filtered)) return null;
+  const metricFiltered = filterScanMetricRows(filtered, market, normalizedSortBy);
+  if (market === "us" && filtered.length && !metricFiltered.length) return null;
+  const sorted = metricFiltered.sort((a, b) => compareQuoteValues(a, b, normalizedSortBy, sortDirection));
+  const activeMetric = percentMetricFor(normalizedSortBy);
+  let pageRows = paginate(sorted, page, perPage).map((row, index) => ({
     ...row,
+    activeChangePercent: activeMetric ? nullableRound(row[activeMetric], 4) : row.activeChangePercent,
+    activeMetric: normalizedSortBy,
+    activeMetricLabel: topMetricLabel(normalizedSortBy),
     signalRank: (page - 1) * perPage + index + 1
   }));
+  if (market === "us" && isOvernightSort(normalizedSortBy)) {
+    pageRows = await enrichUsOvernightRows(pageRows);
+    pageRows = filterScanMetricRows(pageRows, market, normalizedSortBy)
+      .sort((a, b) => compareQuoteValues(a, b, normalizedSortBy, sortDirection))
+      .map((row, index) => ({
+        ...row,
+        activeChangePercent: activeMetric ? nullableRound(row[activeMetric], 4) : row.activeChangePercent,
+        signalRank: (page - 1) * perPage + index + 1
+      }));
+  }
 
   return {
     rows: pageRows,
-    total: filtered.length,
+    total: metricFiltered.length,
+    activeMetric: normalizedSortBy,
+    activeMetricLabel: topMetricLabel(normalizedSortBy),
     scannedAt: newestScannedAt(filtered)
   };
 }
@@ -1313,6 +1623,10 @@ async function fetchStoredRows(market) {
 }
 
 function storedSignalToRow(row) {
+  const price = numberOrNull(row.price);
+  const changeAmount = numberOrNull(row.change_amount) || 0;
+  const closePrice = numberOrNull(row.raw?.previousClose ?? row.raw?.ohlc?.close)
+    ?? (price === null ? null : price - changeAmount);
   return {
     market: row.market,
     symbol: row.symbol || row.ticker,
@@ -1321,11 +1635,13 @@ function storedSignalToRow(row) {
     sector: row.sector || null,
     type: row.raw?.quoteType || null,
     detailUrl: detailUrlForQuote(row.market, { symbol: row.symbol || row.ticker, raw: row.raw }),
-    price: numberOrNull(row.price),
+    price,
+    closePrice,
     preMarketPrice: numberOrNull(row.pre_market_price),
     postMarketPrice: numberOrNull(row.post_market_price),
-    changeAmount: numberOrNull(row.change_amount) || 0,
+    changeAmount,
     changePercent: numberOrNull(row.change_percent),
+    closeChangePercent: numberOrNull(row.raw?.closeChangePercent) ?? numberOrNull(row.change_percent),
     preMarketChangePercent: numberOrNull(row.pre_market_change_percent),
     postMarketChangePercent: numberOrNull(row.post_market_change_percent),
     activeChangePercent: null,
@@ -1421,6 +1737,18 @@ function filterUniverse(universe, query) {
   );
 }
 
+function filterUniverseBySector(universe, sector) {
+  const requestedSector = normalizeSector(sector);
+  if (!requestedSector) return universe;
+  return universe.filter((item) => normalizeSector(item.sector) === requestedSector);
+}
+
+function filterRowsBySector(rows, sector) {
+  const requestedSector = normalizeSector(sector);
+  if (!requestedSector) return rows;
+  return rows.filter((row) => normalizeSector(row.sector) === requestedSector);
+}
+
 function filterQuotes(quotes, query) {
   if (!query) return quotes;
   const needle = query.toLowerCase();
@@ -1440,8 +1768,10 @@ function normalizeTopSortBy(sortBy) {
   const allowed = new Set([
     "changePercent",
     "price",
+    "closePrice",
     "preMarketPrice",
     "postMarketPrice",
+    "closeChangePercent",
     "preMarketChangePercent",
     "postMarketChangePercent"
   ]);
@@ -1452,8 +1782,10 @@ function topMetricLabel(sortBy) {
   return {
     changePercent: "Current change %",
     price: "Current price",
+    closePrice: "Close price",
     preMarketPrice: "Pre-market price",
     postMarketPrice: "Overnight price",
+    closeChangePercent: "Close change %",
     preMarketChangePercent: "Pre-market change %",
     postMarketChangePercent: "Overnight change %"
   }[sortBy] || "Current change %";
@@ -1462,6 +1794,7 @@ function topMetricLabel(sortBy) {
 function percentMetricFor(sortBy) {
   return {
     changePercent: "changePercent",
+    closeChangePercent: "closeChangePercent",
     preMarketChangePercent: "preMarketChangePercent",
     postMarketChangePercent: "postMarketChangePercent"
   }[sortBy] || null;
@@ -1469,6 +1802,90 @@ function percentMetricFor(sortBy) {
 
 function hasSortableValue(value) {
   return value !== null && value !== undefined && value !== "" && Number.isFinite(Number(value));
+}
+
+function closePriceForQuote(quote) {
+  const directClose = numberOrNull(quote.closePrice ?? quote.raw?.previousClose ?? quote.raw?.ohlc?.close);
+  if (directClose !== null) return directClose;
+
+  const price = numberOrNull(quote.price);
+  const changeAmount = numberOrNull(quote.changeAmount);
+  if (price !== null && changeAmount !== null) return price - changeAmount;
+  return null;
+}
+
+function isOvernightSort(sortBy) {
+  const normalizedSortBy = normalizeTopSortBy(sortBy);
+  return normalizedSortBy === "postMarketPrice" || normalizedSortBy === "postMarketChangePercent";
+}
+
+function usesSparseUsSessionFilter(sortBy) {
+  const normalizedSortBy = normalizeTopSortBy(sortBy);
+  return normalizedSortBy === "preMarketPrice"
+    || normalizedSortBy === "preMarketChangePercent"
+    || normalizedSortBy === "postMarketPrice"
+    || normalizedSortBy === "postMarketChangePercent";
+}
+
+function usSessionFilterCacheKey(sortBy, sector) {
+  return `${normalizeTopSortBy(sortBy)}:${normalizeSector(sector)}`;
+}
+
+function filterScanMetricRows(rows, market, sortBy) {
+  if (market !== "us") return rows;
+  const normalizedSortBy = normalizeTopSortBy(sortBy);
+  if (normalizedSortBy === "postMarketPrice" || normalizedSortBy === "postMarketChangePercent") {
+    return rows.filter((row) =>
+      hasSortableValue(row[normalizedSortBy])
+      && sessionPriceIsDistinct(row.postMarketPrice, row.price)
+      && hasMeaningfulPercent(row.postMarketChangePercent)
+    );
+  }
+
+  if (normalizedSortBy === "preMarketPrice" || normalizedSortBy === "preMarketChangePercent") {
+    return rows.filter((row) =>
+      hasSortableValue(row[normalizedSortBy])
+      && sessionPriceIsDistinct(row.preMarketPrice, previousCloseFromPercent(row.preMarketPrice, row.preMarketChangePercent))
+      && hasMeaningfulPercent(row.preMarketChangePercent)
+    );
+  }
+
+  return rows.filter((row) => hasSortableValue(row[normalizedSortBy]));
+}
+
+function hasStaleUsOvernightRows(market, rows) {
+  return market === "us" && rows.some((row) => {
+    const price = numberOrNull(row.price);
+    const overnightPrice = numberOrNull(row.postMarketPrice);
+    if (price === null || overnightPrice === null) return false;
+
+    const storedOvernightPrice = numberOrNull(row.raw?.overnightPrice);
+    const storedOvernightPercent = numberOrNull(row.postMarketChangePercent);
+    const matchesClose = Math.abs(price - overnightPrice) < 0.000001;
+    const noChartDerivedOvernight = storedOvernightPrice === null || Math.abs(storedOvernightPrice - price) < 0.000001;
+    const noOvernightChange = storedOvernightPercent === null || Math.abs(storedOvernightPercent) < 0.000001;
+
+    return matchesClose && noChartDerivedOvernight && noOvernightChange;
+  });
+}
+
+function sessionPriceIsDistinct(sessionPrice, regularPrice) {
+  const session = numberOrNull(sessionPrice);
+  const regular = numberOrNull(regularPrice);
+  if (session === null || regular === null) return false;
+  return Math.abs(session - regular) >= 0.000001;
+}
+
+function hasMeaningfulPercent(value) {
+  const percent = numberOrNull(value);
+  return percent !== null && Math.abs(percent) >= 0.000001;
+}
+
+function previousCloseFromPercent(price, percent) {
+  const numericPrice = numberOrNull(price);
+  const numericPercent = numberOrNull(percent);
+  if (numericPrice === null || numericPercent === null || numericPercent <= -100) return null;
+  return numericPrice / (1 + numericPercent / 100);
 }
 
 function normalizeSector(value) {
@@ -1508,10 +1925,14 @@ function compareQuoteValues(a, b, field, direction) {
     return String(a[field] || "").localeCompare(String(b[field] || "")) * multiplier;
   }
 
-  const aValue = Number(a[field]);
-  const bValue = Number(b[field]);
-  const aFinite = Number.isFinite(aValue);
-  const bFinite = Number.isFinite(bValue);
+  const aRawValue = field === "closePrice" ? closePriceForQuote(a) : a[field];
+  const bRawValue = field === "closePrice" ? closePriceForQuote(b) : b[field];
+  const aMissing = aRawValue === null || aRawValue === undefined || aRawValue === "";
+  const bMissing = bRawValue === null || bRawValue === undefined || bRawValue === "";
+  const aValue = Number(aRawValue);
+  const bValue = Number(bRawValue);
+  const aFinite = !aMissing && Number.isFinite(aValue);
+  const bFinite = !bMissing && Number.isFinite(bValue);
 
   if (!aFinite && !bFinite) return String(a.symbol).localeCompare(String(b.symbol));
   if (!aFinite) return 1;

@@ -323,6 +323,25 @@ td:first-child {
   overflow-x: auto;
 }
 
+.chartTab,
+.toolbarButton,
+.rangeButton {
+  min-height: 0;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  font-size: 12px;
+}
+
+.chartTab:hover,
+.toolbarButton:hover,
+.rangeButton:hover {
+  color: #ffffff;
+  background: transparent;
+}
+
 .chartTab.active {
   color: #ffffff;
   font-weight: 700;
@@ -338,6 +357,11 @@ td:first-child {
   border: 1px solid #53657c;
   border-radius: 3px;
   color: #ffffff;
+}
+
+.toolbarButton.active {
+  color: #ffffff;
+  font-weight: 700;
 }
 
 .chartMeta {
@@ -359,14 +383,50 @@ td:first-child {
   display: block;
 }
 
+.detailsPanel {
+  padding: 16px;
+}
+
+.detailGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.detailItem {
+  min-height: 70px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  background: #0a0f16;
+}
+
+.detailItem span {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.detailItem strong,
+.detailItem a {
+  color: #ffffff;
+  font-size: 14px;
+  text-decoration: none;
+}
+
+.detailEmpty {
+  color: var(--muted);
+}
+
 .pagination {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 14px;
-  padding: 10px 0;
+  padding: 10px 12px;
   border-top: 1px solid var(--line);
   background: var(--panel);
+  flex-wrap: wrap;
 }
 
 .pagination button {
