@@ -5,11 +5,11 @@ This app scans live/polled market data and displays paginated market rows with s
 Pages:
 
 - My Top US Stocks: top 200 US stocks ranked high-to-low by the active US session change metric
-- My Top Indian Stocks: top 200 NSE stocks ranked high-to-low by current change %
-- My Top Crypto: top 200 crypto assets ranked high-to-low by 24h/current change %
+- Top Indian Stocks: top 250 NSE stocks from the full Indian universe, ranked high-to-low by current change %
+- Top Crypto: top 250 crypto assets from the full crypto universe, ranked high-to-low by 24h change %
 - US Stocks: Yahoo Finance quote/chart data for symbols in `data/us-symbols.json`
 - Indian Stocks: Yahoo Finance NSE symbols in `data/india-symbols.json`
-- Crypto: Hyperliquid spot assets in `data/crypto-symbols.json`
+- All Crypto: Hyperliquid spot assets in `data/crypto-symbols.json`
 
 The US universe is generated from NASDAQ Trader symbol directory files and currently contains 12,317 listed US stocks and ETFs. The app paginates this universe and refreshes live prices for the active page every 30 seconds. This avoids making 11,000+ unofficial Yahoo requests every refresh cycle.
 

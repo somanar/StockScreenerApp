@@ -15,12 +15,14 @@
     </header>
 
     <nav class="tabs" aria-label="Markets">
+      <a class="tab" href="/?market=market-watch" data-market="market-watch">Market Watch</a>
+      <a class="tab" href="/?market=earnings" data-market="earnings">Earnings Calendar</a>
       <a class="tab active" href="/?market=us" data-market="us">All US Stocks/ETFs</a>
       <a class="tab" href="/?market=top-us" data-market="top-us">Top US Stocks</a>
       <a class="tab" href="/?market=india" data-market="india">All Indian Stocks</a>
-      <a class="tab" href="/?market=top-india" data-market="top-india">My Top Indian Stocks</a>
-      <a class="tab" href="/?market=top-crypto" data-market="top-crypto">My Top Crypto</a>
-      <a class="tab" href="/?market=crypto" data-market="crypto">Crypto</a>
+      <a class="tab" href="/?market=top-india" data-market="top-india">Top Indian Stocks</a>
+      <a class="tab" href="/?market=crypto" data-market="crypto">All Crypto</a>
+      <a class="tab" href="/?market=top-crypto" data-market="top-crypto">Top Crypto</a>
     </nav>
 
     <main>
@@ -66,15 +68,21 @@
             <option value="">All sectors</option>
           </select>
         </label>
+        <label id="dateFilterLabel" hidden>
+          Date
+          <input id="dateInput" type="date">
+        </label>
         <label id="sortFilterLabel">
           Sort by
           <select id="sortSelect">
             <option value="changePercent" selected>Current change %</option>
             <option value="price">Current price</option>
             <option value="preMarketPrice">Pre-market price</option>
-            <option value="postMarketPrice">Overnight price</option>
+            <option value="postMarketPrice">After-hours price</option>
+            <option value="overnightPrice">Overnight price</option>
             <option value="preMarketChangePercent">Pre-market change %</option>
-            <option value="postMarketChangePercent">Overnight change %</option>
+            <option value="postMarketChangePercent">After-hours change %</option>
+            <option value="overnightChangePercent">Overnight change %</option>
           </select>
         </label>
         <label id="orderFilterLabel">
@@ -107,6 +115,8 @@
                   <th>Current %</th>
                   <th>Pre Price</th>
                   <th>Pre %</th>
+                  <th>After Hours</th>
+                  <th>After Hours %</th>
                   <th>Overnight</th>
                   <th>Overnight %</th>
                 </tr>

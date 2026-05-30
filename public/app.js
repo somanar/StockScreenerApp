@@ -1,7 +1,8 @@
 const state = {
-  market: new URLSearchParams(location.search).get("market") || "us",
+  market: new URLSearchParams(location.search).get("market") || "top-us",
   rows: [],
   search: "",
+  reportDate: "",
   page: 1,
   perPage: 100,
   total: 0,
@@ -10,7 +11,7 @@ const state = {
   sector: "",
   sectors: [],
   sortBy: "changePercent",
-  sortDirection: "asc",
+  sortDirection: "desc",
   selectedSymbol: null,
   detailTab: "chart",
   chartRange: "1d",
@@ -20,6 +21,9 @@ const state = {
   isLoading: false,
   nextRefreshAt: null
 };
+
+document.body.classList.toggle("marketWatchMode", state.market === "market-watch");
+document.body.classList.toggle("earningsFullMode", state.market === "earnings");
 
 const REFRESH_MS = 30_000;
 const topMarkets = new Set(["top-us", "top-india", "top-crypto", "mystocks"]);
@@ -39,6 +43,11 @@ const elements = {
   tableHeaders: document.querySelector("#tableHeaders"),
   status: document.querySelector("#status"),
   watchlistCount: document.querySelector("#watchlistCount"),
+  watchlistTitle: document.querySelector(".watchlistHeader strong"),
+  toolbar: document.querySelector(".toolbar"),
+  workspace: document.querySelector(".workspace"),
+  watchlistPanel: document.querySelector(".watchlistPanel"),
+  chartPanel: document.querySelector(".chartPanel"),
   tabs: document.querySelectorAll(".tab"),
   marketTitle: document.querySelector("#marketTitle"),
   sourceTitle: document.querySelector("#sourceTitle"),
@@ -49,6 +58,8 @@ const elements = {
   limitSelect: document.querySelector("#limitSelect"),
   sectorFilterLabel: document.querySelector("#sectorFilterLabel"),
   sectorSelect: document.querySelector("#sectorSelect"),
+  dateFilterLabel: document.querySelector("#dateFilterLabel"),
+  dateInput: document.querySelector("#dateInput"),
   sortFilterLabel: document.querySelector("#sortFilterLabel"),
   sortSelect: document.querySelector("#sortSelect"),
   orderFilterLabel: document.querySelector("#orderFilterLabel"),
@@ -81,6 +92,10 @@ elements.tabs.forEach((tab) => {
     state.market = tab.dataset.market;
     state.page = 1;
     state.sector = "";
+    state.reportDate = "";
+    state.search = "";
+    state.sortDirection = topMarkets.has(state.market) ? "desc" : state.sortDirection;
+    if (isEarningsMarket(state.market)) state.sortDirection = "asc";
     state.selectedSymbol = null;
     normalizeMarketControls();
     history.pushState({}, "", `/?market=${state.market}`);
@@ -91,16 +106,23 @@ elements.tabs.forEach((tab) => {
 });
 
 function activeSortBy() {
+  if (isMarketWatchMarket(state.market)) return "publishedAt";
+  if (isEarningsMarket(state.market)) return state.sortBy;
   return isBrowseMarket(state.market) ? "changePercent" : state.sortBy;
 }
 
 function activeSortDirection() {
+  if (isMarketWatchMarket(state.market)) return "desc";
+  if (isEarningsMarket(state.market)) return state.sortDirection;
   return isBrowseMarket(state.market) ? "asc" : state.sortDirection;
 }
 
 function normalizeMarketControls() {
   if (isBrowseMarket(state.market)) {
     state.sortBy = "changePercent";
+    state.sortDirection = "asc";
+  }
+  if (isEarningsMarket(state.market) && state.sortBy !== "marketCapValue") {
     state.sortDirection = "asc";
   }
   renderSortOptions();
@@ -113,6 +135,47 @@ function isBrowseMarket(market) {
 }
 
 function sortOptionsForMarket() {
+  if (isMarketWatchMarket(state.market)) {
+    return [
+      ["publishedAt", "Published"],
+      ["source", "Source"],
+      ["factor", "Macro factor"],
+      ["impactScore", "Impact"]
+    ];
+  }
+
+  if (isEarningsMarket(state.market)) {
+    return [
+      ["reportDate", "Report date"],
+      ["symbol", "Symbol"],
+      ["name", "Company"],
+      ["quarter", "Quarter"],
+      ["marketCapValue", "Market cap"]
+    ];
+  }
+
+  if (state.market === "top-us") {
+    return [
+      ["changePercent", "Current change %"],
+      ["preMarketChangePercent", "Pre-market change %"],
+      ["postMarketChangePercent", "After-hours change %"],
+      ["overnightChangePercent", "Overnight change %"]
+    ];
+  }
+
+  if (state.market === "top-crypto") {
+    return [
+      ["changePercent", "24h change %"]
+    ];
+  }
+
+  if (isCryptoMarket(state.market)) {
+    return [
+      ["changePercent", "24h change %"],
+      ["price", "Current price"]
+    ];
+  }
+
   if (state.market === "india" || state.market === "top-india") {
     return [
       ["changePercent", "Current change %"],
@@ -126,16 +189,18 @@ function sortOptionsForMarket() {
     ["changePercent", "Current change %"],
     ["price", "Current price"],
     ["preMarketPrice", "Pre-market price"],
-    ["postMarketPrice", "Overnight price"],
+    ["postMarketPrice", "After-hours price"],
+    ["overnightPrice", "Overnight price"],
     ["preMarketChangePercent", "Pre-market change %"],
-    ["postMarketChangePercent", "Overnight change %"]
+    ["postMarketChangePercent", "After-hours change %"],
+    ["overnightChangePercent", "Overnight change %"]
   ];
 }
 
 function renderSortOptions() {
   const options = sortOptionsForMarket();
   if (!options.some(([value]) => value === state.sortBy)) {
-    state.sortBy = "changePercent";
+    state.sortBy = options[0]?.[0] || "changePercent";
   }
   elements.sortSelect.innerHTML = options
     .map(([value, label]) => `<option value="${escapeHtml(value)}">${escapeHtml(label)}</option>`)
@@ -156,6 +221,11 @@ elements.limitSelect.addEventListener("change", (event) => {
 });
 elements.sectorSelect.addEventListener("change", (event) => {
   state.sector = event.target.value;
+  state.page = 1;
+  loadMarket();
+});
+elements.dateInput?.addEventListener("change", (event) => {
+  state.reportDate = event.target.value;
   state.page = 1;
   loadMarket();
 });
@@ -188,6 +258,10 @@ window.addEventListener("popstate", () => {
   state.market = new URLSearchParams(location.search).get("market") || "us";
   state.page = 1;
   state.sector = "";
+  state.reportDate = "";
+  state.search = "";
+  state.sortDirection = topMarkets.has(state.market) ? "desc" : state.sortDirection;
+  if (isEarningsMarket(state.market)) state.sortDirection = "asc";
   state.selectedSymbol = null;
   elements.tabs.forEach((item) => item.classList.toggle("active", item.dataset.market === state.market));
   updateToolbarMode();
@@ -264,7 +338,7 @@ async function loadMarket() {
     elements.sourceTitle.textContent = payload.source || "--";
     elements.scanTime.textContent = formatDate(payload.scannedAt);
     elements.storageStatus.textContent = describeStorage(payload.storage);
-    if ((topMarkets.has(state.market) || state.market === "us") && payload.activeMetricLabel) {
+    if ((topMarkets.has(state.market) || state.market === "us" || isEarningsMarket(state.market) || isMarketWatchMarket(state.market)) && payload.activeMetricLabel) {
       elements.sourceTitle.textContent = `${payload.source || "--"} | ${payload.activeMetricLabel}`;
     }
     elements.status.textContent = state.rows.length
@@ -287,6 +361,24 @@ async function loadMarket() {
 }
 
 function apiUrl() {
+  if (isMarketWatchMarket(state.market)) {
+    return "/api/market-watch";
+  }
+
+  if (isEarningsMarket(state.market)) {
+    const params = new URLSearchParams({
+      year: String(new Date().getFullYear()),
+      quarter: state.sector || "all",
+      date: state.reportDate,
+      page: String(state.page),
+      perPage: String(state.perPage),
+      query: state.search,
+      sortBy: activeSortBy(),
+      direction: activeSortDirection()
+    });
+    return `/api/earnings?${params.toString()}`;
+  }
+
   if (topMarkets.has(state.market)) {
     const market = state.market === "mystocks" ? "top-us" : state.market;
     const params = new URLSearchParams({
@@ -312,10 +404,21 @@ function apiUrl() {
 }
 
 function statusText(payload) {
+  if (isMarketWatchMarket(state.market)) {
+    return `${state.rows.length} headlines from the last 7 days. Newest updates stay on top.`;
+  }
+
+  if (isEarningsMarket(state.market)) {
+    const quarterNote = payload.sector ? ` for ${payload.sector}` : "";
+    const dateNote = payload.reportDate ? ` on ${payload.reportDate}` : "";
+    return `${state.rows.length} earnings shown${quarterNote}${dateNote} from ${formatCompact(payload.total)} scheduled reports.`;
+  }
+
   if (topMarkets.has(state.market)) {
-    const cacheNote = payload.cache?.hit ? " Cached while refreshing." : "";
+    const cacheNote = payload.cache?.hit ? " (Real-time data refreshing...)" : "";
     const sectorNote = payload.sector ? ` in ${payload.sector}` : "";
-    return `Top ${state.rows.length}${sectorNote} by ${payload.activeMetricLabel || "selected metric"}.${cacheNote}`;
+    const limitNote = state.market === "top-us" ? "Top 50" : `Top ${state.rows.length}`;
+    return `${limitNote}${sectorNote} by ${payload.activeMetricLabel || "selected metric"}.${cacheNote}`;
   }
 
   if (state.market === "us" && payload.activeMetricLabel) {
@@ -335,13 +438,46 @@ function scheduleRefresh() {
     return;
   }
 
-  state.nextRefreshAt = Date.now() + REFRESH_MS;
+  const interval = refreshIntervalMs();
+  state.nextRefreshAt = Date.now() + interval;
   updateRealtimeStatus();
-  refreshTimer = setTimeout(loadMarket, REFRESH_MS);
+  refreshTimer = setTimeout(loadMarket, interval);
 }
 
 function renderRows() {
   renderTableHeaders();
+  if (isMarketWatchMarket(state.market)) {
+    elements.rows.innerHTML = state.rows.map((row, index) => {
+      const selectedClass = row.symbol === state.selectedSymbol ? " selected" : "";
+      return `
+        <tr class="watchRow newsCard${index === 0 ? " leadNews" : ""}${selectedClass}" data-symbol="${escapeHtml(row.symbol)}">
+          <td>
+            <article>
+              ${row.imageUrl ? `<a href="${escapeHtml(row.detailUrl || "#")}" target="_blank" rel="noopener noreferrer"><img class="newsImage" src="${escapeHtml(row.imageUrl)}" alt=""></a>` : ""}
+              <div class="newsMeta">
+                <span>${escapeHtml(row.source || "")}</span>
+                <span>${escapeHtml(row.factor || "")}</span>
+                <span>${formatDate(row.publishedAt)}</span>
+              </div>
+              <a class="newsHeadline" href="${escapeHtml(row.detailUrl || "#")}" target="_blank" rel="noopener noreferrer">${escapeHtml(row.title || "--")}</a>
+              <p class="newsSummary">${escapeHtml(row.summary || "")}</p>
+              <a class="newsLink" href="${escapeHtml(row.detailUrl || "#")}" target="_blank" rel="noopener noreferrer">Read details</a>
+            </article>
+          </td>
+        </tr>
+      `;
+    }).join("");
+    elements.watchlistCount.textContent = `${formatCompact(state.rows.length)} shown`;
+    elements.rows.querySelectorAll(".watchRow").forEach((rowElement) => {
+      rowElement.addEventListener("click", () => {
+        state.selectedSymbol = rowElement.dataset.symbol;
+        renderRows();
+        updateSelectedPanel();
+      });
+    });
+    return;
+  }
+
   elements.rows.innerHTML = state.rows.map((row) => {
     const selectedClass = row.symbol === state.selectedSymbol ? " selected" : "";
     const metricCells = rowCellsForMarket(row);
@@ -368,9 +504,26 @@ function renderRows() {
 }
 
 function renderTableHeaders() {
-  const metricHeaders = isIndianMarket(state.market)
-    ? ["Current Price", "Current %", "Close Price", "Close %"]
-    : ["Current Price", "Current %", "Pre Price", "Pre %", "Overnight", "Overnight %"];
+  if (isMarketWatchMarket(state.market)) {
+    elements.tableHeaders.innerHTML = "";
+    return;
+  }
+
+  if (isEarningsMarket(state.market)) {
+    elements.tableHeaders.innerHTML = [
+      "Symbol",
+      "Company",
+      "Report Date",
+      "Quarter",
+      "Call Time",
+      "EPS Est",
+      "Last Year EPS",
+      "Market Cap"
+    ].map((label) => `<th>${escapeHtml(label)}</th>`).join("");
+    return;
+  }
+
+  const metricHeaders = metricHeadersForMarket();
   elements.tableHeaders.innerHTML = [
     "Symbol",
     "Trend",
@@ -378,14 +531,49 @@ function renderTableHeaders() {
   ].map((label) => `<th>${escapeHtml(label)}</th>`).join("");
 }
 
+function metricHeadersForMarket() {
+  if (isCryptoMarket(state.market)) return ["Current Price", "24h Change", "24h Volume"];
+  if (isIndianMarket(state.market)) return ["Current Price", "Current %", "Close Price", "Close %"];
+  return ["Current Price", "Current %", "Pre Price", "Pre %", "After Hours", "After Hours %", "Overnight", "Overnight %"];
+}
+
 function rowCellsForMarket(row) {
+  if (isMarketWatchMarket(state.market)) {
+    return `
+      <td>${escapeHtml(row.factor || "--")}</td>
+      <td>${escapeHtml(row.impact || "--")}</td>
+      <td>${formatDate(row.publishedAt)}</td>
+      <td class="summaryCell">${escapeHtml(row.summary || "--")}</td>
+    `;
+  }
+
+  if (isEarningsMarket(state.market)) {
+    return `
+      <td>${escapeHtml(row.name || "--")}</td>
+      <td>${escapeHtml(row.reportDate || "--")}</td>
+      <td>${escapeHtml(row.quarter || "--")}</td>
+      <td>${escapeHtml(row.callTime || "--")}</td>
+      <td>${escapeHtml(row.epsForecast || "--")}</td>
+      <td>${escapeHtml(row.epsActual || "--")}</td>
+      <td>${escapeHtml(row.marketCap || "--")}</td>
+    `;
+  }
+
+  if (isCryptoMarket(state.market)) {
+    return `
+      <td>${formatNumberOrDash(row.price)}</td>
+      <td class="${valueClass(row.changePercent)}">${formatPercentOrDash(row.changePercent)}</td>
+      <td>${formatCompact(row.volume)}</td>
+    `;
+  }
+
   if (isIndianMarket(state.market)) {
     const closePrice = closePriceForRow(row);
     const closePercent = closeChangePercentForRow(row);
     return `
-      <td>${formatNumberOrDash(row.price)}</td>
+      <td>${formatPriceOrDash(row.price)}</td>
       <td class="${valueClass(row.changePercent)}">${formatPercentOrDash(row.changePercent)}</td>
-      <td>${formatNumberOrDash(closePrice)}</td>
+      <td>${formatPriceOrDash(closePrice)}</td>
       <td class="${valueClass(closePercent)}">${formatPercentOrDash(closePercent)}</td>
     `;
   }
@@ -397,6 +585,8 @@ function rowCellsForMarket(row) {
     <td class="${valueClass(row.preMarketChangePercent)}">${formatPercentOrDash(row.preMarketChangePercent)}</td>
     <td>${formatNumberOrDash(row.postMarketPrice)}</td>
     <td class="${valueClass(row.postMarketChangePercent)}">${formatPercentOrDash(row.postMarketChangePercent)}</td>
+    <td>${formatNumberOrDash(row.overnightPrice)}</td>
+    <td class="${valueClass(row.overnightChangePercent)}">${formatPercentOrDash(row.overnightChangePercent)}</td>
   `;
 }
 
@@ -413,10 +603,39 @@ function updateSelectedPanel() {
   }
 
   elements.selectedSymbol.textContent = row.symbol;
+  if (isMarketWatchMarket(state.market)) {
+    elements.selectedSymbol.textContent = row.source || "--";
+    elements.selectedPrice.textContent = row.factor || "--";
+    elements.selectedPrice.className = "selectedPrice";
+    elements.selectedChange.textContent = row.impact || "--";
+    elements.selectedChange.className = "selectedChange";
+    elements.detailsLink.href = row.detailUrl || "#";
+    state.detailTab = "financials";
+    renderDetailsPanel(row);
+    updateDetailTab();
+    elements.chartMeta.textContent = row.summary || "Select a headline to view details.";
+    drawEmptyChart();
+    return;
+  }
+
+  if (isEarningsMarket(state.market)) {
+    elements.selectedPrice.textContent = row.reportDate || "--";
+    elements.selectedPrice.className = "selectedPrice";
+    elements.selectedChange.textContent = `${row.quarter || "--"} ${row.callTime || ""}`.trim();
+    elements.selectedChange.className = "selectedChange";
+    elements.detailsLink.href = row.detailUrl || "#";
+    state.detailTab = "financials";
+    renderDetailsPanel(row);
+    updateDetailTab();
+    elements.chartMeta.textContent = "Select Chart for a price chart, or use Financials/Profile for earnings details.";
+    drawEmptyChart();
+    return;
+  }
+
   const display = displayMetric(row);
-  elements.selectedPrice.textContent = formatNumberOrDash(display.price);
+  elements.selectedPrice.textContent = formatPriceOrDash(display.price);
   elements.selectedPrice.className = `selectedPrice ${valueClass(display.percent)}`;
-  elements.selectedChange.textContent = `${formatSignedOrDash(display.amount)} ${formatPercentOrDash(display.percent)}`;
+  elements.selectedChange.textContent = `${formatSignedPriceOrDash(display.amount)} ${formatPercentOrDash(display.percent)}`;
   elements.selectedChange.className = `selectedChange ${valueClass(display.percent)}`;
   elements.detailsLink.href = row.detailUrl || "#";
   renderDetailsPanel(row);
@@ -435,12 +654,27 @@ function displayMetric(row) {
   }
 
   if (sortBy === "postMarketPrice" || sortBy === "postMarketChangePercent") {
+    const baseline = numberOrNull(row.raw?.regularMarketPrice) ?? numberOrNull(row.raw?.previousClose) ?? numberOrNull(row.price);
     return {
       price: row.postMarketPrice,
-      amount: numberOrNull(row.postMarketPrice) === null || numberOrNull(row.price) === null
+      amount: numberOrNull(row.raw?.postMarketChange) !== null
+        ? row.raw.postMarketChange
+        : numberOrNull(row.postMarketPrice) === null || baseline === null
         ? null
-        : Number(row.postMarketPrice) - Number(row.price),
+        : Number(row.postMarketPrice) - baseline,
       percent: row.postMarketChangePercent
+    };
+  }
+
+  if (sortBy === "overnightPrice" || sortBy === "overnightChangePercent") {
+    return {
+      price: row.overnightPrice,
+      amount: numberOrNull(row.overnightChangeAmount) !== null
+        ? row.overnightChangeAmount
+        : numberOrNull(row.overnightPrice) === null || numberOrNull(row.price) === null
+          ? null
+          : Number(row.overnightPrice) - Number(row.price),
+      percent: row.overnightChangePercent
     };
   }
 
@@ -499,21 +733,82 @@ async function loadChart(row) {
     const payload = await response.json();
     if (!response.ok) throw new Error(payload.error || "Chart unavailable");
 
+    chartState = { candles: payload.candles || [], row, hoverIndex: null, geometry: null };
     elements.chartMeta.textContent = chartMetaText(row, payload);
     drawChart(payload.candles || [], row);
   } catch (error) {
     if (error.name === "AbortError") return;
-    elements.chartMeta.textContent = `${row.symbol} chart unavailable. ${error.message}`;
-    drawEmptyChart();
+    const fallbackCandles = fallbackCandlesForRow(row);
+    chartState = { candles: fallbackCandles, row, hoverIndex: null, geometry: null };
+    elements.chartMeta.textContent = `${row.symbol} live chart unavailable. Showing latest price move. ${error.message}`;
+    drawChart(fallbackCandles, row);
   }
 }
 
+function fallbackCandlesForRow(row) {
+  const price = numberOrNull(row.price);
+  const changeAmount = numberOrNull(row.changeAmount);
+  const close = closePriceForRow(row) ?? (price !== null && changeAmount !== null ? price - changeAmount : null);
+  if (price === null || close === null) return [];
+
+  const points = 48;
+  const now = Date.now();
+  const start = now - 24 * 60 * 60 * 1000;
+  const step = (now - start) / (points - 1);
+  const range = Math.max(Math.abs(price - close), Math.abs(price) * 0.002, 0.01);
+  const candles = [];
+
+  for (let index = 0; index < points; index += 1) {
+    const progress = index / (points - 1);
+    const base = close + (price - close) * progress;
+    const wave = Math.sin(progress * Math.PI * 3) * range * 0.12;
+    const candleClose = index === points - 1 ? price : base + wave;
+    const candleOpen = index === 0 ? close : candles[index - 1].close;
+    candles.push({
+      time: new Date(start + step * index).toISOString(),
+      open: candleOpen,
+      high: Math.max(candleOpen, candleClose) + range * 0.05,
+      low: Math.min(candleOpen, candleClose) - range * 0.05,
+      close: candleClose,
+      volume: Number(row.volume || 0) / points
+    });
+  }
+
+  return candles;
+}
+
 function updateToolbarMode() {
-  const supportsSector = topMarkets.has(state.market) || isSectorBrowseMarket(state.market);
-  const supportsSort = !isBrowseMarket(state.market);
+  const isAllCrypto = state.market === "crypto";
+  const isEarnings = isEarningsMarket(state.market);
+  const isMarketWatch = isMarketWatchMarket(state.market);
+  document.body.classList.toggle("marketWatchMode", isMarketWatch);
+  document.body.classList.toggle("earningsFullMode", isEarnings);
+  if (elements.watchlistTitle) {
+    elements.watchlistTitle.textContent = isMarketWatch
+      ? "Latest Macro Headlines"
+      : isEarnings ? "Earnings Calendar" : "Watchlists";
+  }
+  if (elements.toolbar) elements.toolbar.hidden = isMarketWatch;
+  if (elements.chartPanel) elements.chartPanel.hidden = isMarketWatch || isEarnings;
+  const supportsSector = isEarnings || (!isAllCrypto && (topMarkets.has(state.market) || isSectorBrowseMarket(state.market)));
+  const supportsSort = isEarnings || (!isAllCrypto && !isBrowseMarket(state.market));
+  elements.searchInput.closest("label").hidden = isMarketWatch;
+  elements.limitSelect.closest("label").hidden = isMarketWatch;
+  elements.searchInput.disabled = isMarketWatch;
+  elements.limitSelect.disabled = isMarketWatch;
+  if (isMarketWatch) {
+    state.search = "";
+    state.page = 1;
+  }
+  elements.sectorFilterLabel.childNodes[0].textContent = isEarnings ? "Quarter " : "Sector ";
   elements.sectorFilterLabel.hidden = !supportsSector;
   elements.sectorSelect.disabled = !supportsSector;
   elements.sectorSelect.value = state.sector;
+  if (elements.dateFilterLabel && elements.dateInput) {
+    elements.dateFilterLabel.hidden = !isEarnings;
+    elements.dateInput.disabled = !isEarnings;
+    elements.dateInput.value = state.reportDate;
+  }
   elements.sortFilterLabel.hidden = !supportsSort;
   elements.orderFilterLabel.hidden = !supportsSort;
   elements.sortSelect.disabled = !supportsSort;
@@ -527,6 +822,18 @@ function isSectorBrowseMarket(market) {
 
 function isIndianMarket(market) {
   return market === "india" || market === "top-india";
+}
+
+function isCryptoMarket(market) {
+  return market === "crypto" || market === "top-crypto";
+}
+
+function isMarketWatchMarket(market) {
+  return market === "market-watch";
+}
+
+function isEarningsMarket(market) {
+  return market === "earnings";
 }
 
 function updateRangeButtons() {
@@ -556,41 +863,135 @@ function renderDetailsPanel(row) {
     return;
   }
 
+  if (isMarketWatchMarket(state.market)) {
+    const panels = {
+      financials: [
+        ["Headline", row.title || "--"],
+        ["Source", row.source || "--"],
+        ["Published", formatDate(row.publishedAt)],
+        ["Macro factor", row.factor || "--"],
+        ["Impact", row.impact || "--"],
+        ["Summary", row.summary || "--"]
+      ],
+      valuation: [
+        ["Why it matters", row.reason || "--"],
+        ["Selected metric", topMetricName()],
+        ["Signal rank", row.signalRank || "--"],
+        ["Source", row.source || "--"]
+      ],
+      profile: [
+        ["Headline", row.title || "--"],
+        ["Provider", row.source || "--"],
+        ["Details", row.detailUrl ? `<a href="${escapeHtml(row.detailUrl)}" target="_blank" rel="noopener noreferrer">Open article</a>` : "--"]
+      ]
+    };
+    const items = panels[state.detailTab] || panels.financials;
+    elements.detailsPanel.innerHTML = detailGridHtml(items);
+    return;
+  }
+
+  if (isEarningsMarket(state.market)) {
+    const panels = {
+      financials: [
+        ["Report date", row.reportDate || "--"],
+        ["Fiscal quarter", row.fiscalQuarterEnding || row.quarter || "--"],
+        ["Call time", row.callTime || "--"],
+        ["EPS estimate", row.epsForecast || "--"],
+        ["Last year EPS", row.epsActual || "--"],
+        ["Revenue estimate", row.revenueEstimate || "--"],
+        ["Revenue growth", row.revenueGrowth || "--"],
+        ["Market cap", row.marketCap || "--"]
+      ],
+      valuation: [
+        ["Selected metric", topMetricName()],
+        ["Signal rank", row.signalRank || "--"],
+        ["Source", row.source || "--"],
+        ["Estimates", row.noOfEsts || "--"],
+        ["Last year report", row.lastYearReportDate || "--"]
+      ],
+      profile: [
+        ["Name", row.name || "--"],
+        ["Symbol", row.symbol || "--"],
+        ["Quarter", row.quarter || "--"],
+        ["Details", row.detailUrl ? `<a href="${escapeHtml(row.detailUrl)}" target="_blank" rel="noopener noreferrer">Open details</a>` : "--"]
+      ]
+    };
+    const items = panels[state.detailTab] || panels.financials;
+    elements.detailsPanel.innerHTML = detailGridHtml(items);
+    return;
+  }
+
   const display = displayMetric(row);
-  const sessionItems = isIndianMarket(state.market)
-    ? [["Close", `${formatNumberOrDash(closePriceForRow(row))} ${formatPercentOrDash(closeChangePercentForRow(row))}`]]
+  const raw = row.raw || {};
+  const currency = raw.currency || row.currency || (isIndianMarket(state.market) ? "INR" : isCryptoMarket(state.market) ? "USD" : "USD");
+  const previousClose = numberOrNull(raw.previousClose ?? raw.prevDayPx);
+  const latestChartPrice = numberOrNull(raw.latestChartPrice ?? raw.regularMarketPrice ?? raw.markPx);
+  const regularMarketPrice = numberOrNull(raw.regularMarketPrice);
+  const marketCap = numberOrNull(raw.marketCap);
+  const changeLabel = isCryptoMarket(state.market) ? "24h change" : "Current change";
+  const sessionItems = isCryptoMarket(state.market)
+    ? [
+      ["24h change", `${formatSignedPriceOrDash(row.changeAmount)} ${formatPercentOrDash(row.changePercent)}`],
+      ["24h volume", formatCompact(row.volume)],
+      ["Previous day", formatPriceOrDash(previousClose)]
+    ]
+    : isIndianMarket(state.market)
+    ? [
+      ["Close", `${formatPriceOrDash(closePriceForRow(row))} ${formatPercentOrDash(closeChangePercentForRow(row))}`],
+      ["Previous close", formatPriceOrDash(previousClose)],
+      ["Market state", raw.marketState || "--"]
+    ]
     : [
       ["Pre-market", `${formatNumberOrDash(row.preMarketPrice)} ${formatPercentOrDash(row.preMarketChangePercent)}`],
-      ["Overnight", `${formatNumberOrDash(row.postMarketPrice)} ${formatPercentOrDash(row.postMarketChangePercent)}`]
+      ["After hours", `${formatNumberOrDash(row.postMarketPrice)} ${formatPercentOrDash(row.postMarketChangePercent)}`],
+      ["Overnight", `${formatNumberOrDash(row.overnightPrice)} ${formatPercentOrDash(row.overnightChangePercent)}`],
+      ["Close", `${formatPriceOrDash(closePriceForRow(row))} ${formatPercentOrDash(closeChangePercentForRow(row))}`],
+      ["Previous close", formatPriceOrDash(previousClose)],
+      ["Market state", raw.marketState || "--"]
     ];
   const panels = {
     financials: [
-      ["Price", formatNumberOrDash(row.price)],
+      ["Current price", formatPriceOrDash(row.price)],
+      [changeLabel, `${formatSignedPriceOrDash(row.changeAmount)} ${formatPercentOrDash(row.changePercent)}`],
       ["Volume", formatCompact(row.volume)],
-      ["Current change", `${formatSignedOrDash(row.changeAmount)} ${formatPercentOrDash(row.changePercent)}`],
       ...sessionItems,
+      ["Currency", currency],
       ["Last scan", formatDate(row.scannedAt)]
     ],
     valuation: [
       ["Selected metric", topMetricName()],
-      ["Selected price", formatNumberOrDash(display.price)],
-      ["Selected change", `${formatSignedOrDash(display.amount)} ${formatPercentOrDash(display.percent)}`],
+      ["Selected price", formatPriceOrDash(display.price)],
+      ["Selected change", `${formatSignedPriceOrDash(display.amount)} ${formatPercentOrDash(display.percent)}`],
       ["Signal rank", row.signalRank || "--"],
+      ["Active change", formatPercentOrDash(row.activeChangePercent)],
+      ["Regular market", formatPriceOrDash(regularMarketPrice)],
+      ["Latest chart price", formatPriceOrDash(latestChartPrice)],
+      ["Market cap", marketCap ? formatCompact(marketCap) : "--"],
+      ["Volume", formatCompact(row.volume)],
       ["Source", row.source || "--"],
-      ["P/E", row.raw?.trailingPE ? formatNumber(row.raw.trailingPE) : "--"]
+      ["P/E", raw.trailingPE ? formatNumber(raw.trailingPE) : "--"]
     ],
     profile: [
       ["Name", row.name || "--"],
       ["Symbol", row.symbol || "--"],
       ["Exchange", row.exchange || "--"],
       ["Sector", row.sector || "--"],
-      ["Type", row.type || row.raw?.quoteType || "--"],
+      ["Type", row.type || raw.quoteType || "--"],
+      ["Market", state.market],
+      ["Currency", currency],
+      ["Quote type", raw.quoteType || "--"],
+      ["Data source", row.source || "--"],
+      ["Last scan", formatDate(row.scannedAt)],
       ["Details", row.detailUrl ? `<a href="${escapeHtml(row.detailUrl)}" target="_blank" rel="noopener noreferrer">Open details</a>` : "--"]
     ]
   };
 
   const items = panels[state.detailTab] || panels.financials;
-  elements.detailsPanel.innerHTML = `
+  elements.detailsPanel.innerHTML = detailGridHtml(items);
+}
+
+function detailGridHtml(items) {
+  return `
     <div class="detailGrid">
       ${items.map(([label, value]) => `
         <div class="detailItem">
@@ -603,13 +1004,41 @@ function renderDetailsPanel(row) {
 }
 
 function topMetricName() {
+  if (isMarketWatchMarket(state.market)) {
+    return {
+      publishedAt: "Published",
+      source: "Source",
+      factor: "Macro factor",
+      impactScore: "Impact"
+    }[activeSortBy()] || "Published";
+  }
+
+  if (isEarningsMarket(state.market)) {
+    return {
+      reportDate: "Report date",
+      symbol: "Symbol",
+      name: "Company",
+      quarter: "Quarter",
+      marketCapValue: "Market cap"
+    }[activeSortBy()] || "Report date";
+  }
+
+  if (isCryptoMarket(state.market)) {
+    return {
+      changePercent: "24h change %",
+      price: "Current price"
+    }[activeSortBy()] || "24h change %";
+  }
+
   return {
     changePercent: "Current change %",
     price: "Current price",
     preMarketPrice: "Pre-market price",
-    postMarketPrice: "Overnight price",
+    postMarketPrice: "After-hours price",
+    overnightPrice: "Overnight price",
     preMarketChangePercent: "Pre-market change %",
-    postMarketChangePercent: "Overnight change %",
+    postMarketChangePercent: "After-hours change %",
+    overnightChangePercent: "Overnight change %",
     closePrice: "Close price",
     closeChangePercent: "Close change %"
   }[activeSortBy()] || "Current change %";
@@ -620,8 +1049,11 @@ function renderSectorOptions() {
   const current = sectors.includes(state.sector) ? state.sector : "";
   if (current !== state.sector) state.sector = current;
 
+  const allLabel = isMarketWatchMarket(state.market)
+    ? "All factors"
+    : isEarningsMarket(state.market) ? "All quarters" : "All sectors";
   elements.sectorSelect.innerHTML = [
-    `<option value="">All sectors</option>`,
+    `<option value="">${allLabel}</option>`,
     ...sectors.map((sector) => `<option value="${escapeHtml(sector)}">${escapeHtml(sector)}</option>`)
   ].join("");
   elements.sectorSelect.value = state.sector;
@@ -630,10 +1062,10 @@ function renderSectorOptions() {
 function chartMetaText(row, payload) {
   const candles = payload.candles || [];
   const last = candles[candles.length - 1] || {};
-  const open = formatNumberOrDash(last.open);
-  const high = formatNumberOrDash(last.high);
-  const low = formatNumberOrDash(last.low);
-  const close = formatNumberOrDash(last.close);
+  const open = formatPriceOrDash(last.open);
+  const high = formatPriceOrDash(last.high);
+  const low = formatPriceOrDash(last.low);
+  const close = formatPriceOrDash(last.close);
   return `O ${open}  H ${high}  L ${low}  C ${close}  Vol ${formatCompact(last.volume)}  ${escapePlain(row.name)}`;
 }
 
@@ -664,7 +1096,7 @@ function drawChart(candles, row) {
   const volumeTop = priceBottom + 22;
   const volumeBottom = height - 24;
   const left = 46;
-  const right = width - 46;
+  const right = width - (isIndianMarket(state.market) ? 88 : 46);
   const chartWidth = right - left;
   const visible = candles.slice(-130);
   const prices = visible.flatMap((candle) => [candle.high, candle.low]).filter((value) => Number.isFinite(Number(value)));
@@ -693,7 +1125,7 @@ function drawChart(candles, row) {
   for (let index = 0; index <= 5; index += 1) {
     const value = low + ((high - low) * (5 - index)) / 5;
     const y = priceTop + ((high - value) / (high - low)) * (priceBottom - priceTop);
-    context.fillText(formatNumber(value), width - 8, y);
+    context.fillText(formatChartPrice(value), width - 8, y);
   }
 
   visible.forEach((candle, index) => {
@@ -740,11 +1172,13 @@ function drawChart(candles, row) {
     context.lineTo(right, y);
     context.stroke();
     context.setLineDash([]);
+    const lastPriceLabel = formatChartPrice(lastPrice);
+    const labelWidth = Math.max(40, context.measureText(lastPriceLabel).width + 14);
     context.fillStyle = row.changePercent < 0 ? "#ff3f5f" : "#00c477";
-    context.fillRect(right + 4, y - 10, 40, 20);
+    context.fillRect(right + 4, y - 10, labelWidth, 20);
     context.fillStyle = "#ffffff";
     context.textAlign = "center";
-    context.fillText(formatNumber(lastPrice), right + 24, y + 1);
+    context.fillText(lastPriceLabel, right + 4 + labelWidth / 2, y + 1);
   }
 
   context.textAlign = "left";
@@ -787,12 +1221,14 @@ function drawCrosshair(context, index) {
   context.stroke();
   context.setLineDash([]);
 
+  const closeLabel = formatChartPrice(candle.close);
+  const labelWidth = Math.max(46, context.measureText(closeLabel).width + 14);
   context.fillStyle = "#d7e6fb";
-  context.fillRect(right + 4, y - 10, 46, 20);
+  context.fillRect(right + 4, y - 10, labelWidth, 20);
   context.fillStyle = "#07101a";
   context.textAlign = "center";
   context.textBaseline = "middle";
-  context.fillText(formatNumber(candle.close), right + 27, y);
+  context.fillText(closeLabel, right + 4 + labelWidth / 2, y);
   context.restore();
 }
 
@@ -823,7 +1259,7 @@ function drawMovingAverage(context, visible, geometry) {
 }
 
 function candleMetaText(candle) {
-  return `${formatChartTime(candle.time)}  O ${formatNumberOrDash(candle.open)}  H ${formatNumberOrDash(candle.high)}  L ${formatNumberOrDash(candle.low)}  C ${formatNumberOrDash(candle.close)}  Vol ${formatCompact(candle.volume)}`;
+  return `${formatChartTime(candle.time)}  O ${formatPriceOrDash(candle.open)}  H ${formatPriceOrDash(candle.high)}  L ${formatPriceOrDash(candle.low)}  C ${formatPriceOrDash(candle.close)}  Vol ${formatCompact(candle.volume)}`;
 }
 
 function drawGrid(context, width, height, left, right) {
@@ -906,6 +1342,9 @@ function scale(value, min, max, outputMin, outputMax) {
 }
 
 function updatePagination() {
+  const pagination = elements.pageInfo.closest(".pagination");
+  if (pagination) pagination.hidden = isMarketWatchMarket(state.market);
+  if (isMarketWatchMarket(state.market)) return;
   elements.pageInfo.textContent = `Page ${state.page} of ${state.totalPages} | ${formatCompact(state.total)} matches`;
   elements.prevPageButton.disabled = state.isLoading || state.page <= 1;
   elements.nextPageButton.disabled = state.isLoading || state.page >= state.totalPages;
@@ -913,6 +1352,7 @@ function updatePagination() {
 
 function describeStorage(storage) {
   if (!storage) return "--";
+  if (isMarketWatchMarket(state.market)) return storage.source || "Rolling 7-day cache";
   if (!storage.enabled) return "Env needed";
   if (storage.error) return storage.error;
   if (storage.warning) return storage.warning;
@@ -920,6 +1360,7 @@ function describeStorage(storage) {
 }
 
 function updateRealtimeStatus() {
+  const intervalSeconds = Math.round(refreshIntervalMs() / 1000);
   if (!state.autoRefresh) {
     elements.realtimeStatus.textContent = "Paused";
     return;
@@ -931,12 +1372,16 @@ function updateRealtimeStatus() {
   }
 
   if (!state.nextRefreshAt) {
-    elements.realtimeStatus.textContent = "Auto 30s";
+    elements.realtimeStatus.textContent = `Auto ${intervalSeconds}s`;
     return;
   }
 
   const seconds = Math.max(0, Math.ceil((state.nextRefreshAt - Date.now()) / 1000));
   elements.realtimeStatus.textContent = `Next ${seconds}s`;
+}
+
+function refreshIntervalMs() {
+  return isMarketWatchMarket(state.market) ? 15_000 : REFRESH_MS;
 }
 
 function formatDate(value) {
@@ -967,6 +1412,28 @@ function formatNumberOrDash(value) {
   return Number.isFinite(Number(value)) ? formatNumber(Number(value)) : "--";
 }
 
+function formatPrice(value) {
+  if (!Number.isFinite(Number(value))) return "--";
+  const number = Number(value);
+  if (!isIndianMarket(state.market)) return formatNumber(number);
+  return new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    maximumFractionDigits: number < 1 ? 6 : 2
+  }).format(number);
+}
+
+function formatPriceOrDash(value) {
+  return Number.isFinite(Number(value)) ? formatPrice(Number(value)) : "--";
+}
+
+function formatChartPrice(value) {
+  if (!Number.isFinite(Number(value))) return "--";
+  return isIndianMarket(state.market)
+    ? `₹${formatNumber(Number(value))}`
+    : formatNumber(Number(value));
+}
+
 function formatPercentOrDash(value) {
   return Number.isFinite(Number(value)) ? `${formatSigned(Number(value))}%` : "--";
 }
@@ -986,6 +1453,14 @@ function formatSigned(value) {
 
 function formatSignedOrDash(value) {
   return Number.isFinite(Number(value)) ? formatSigned(Number(value)) : "--";
+}
+
+function formatSignedPriceOrDash(value) {
+  if (!Number.isFinite(Number(value))) return "--";
+  if (!isIndianMarket(state.market)) return formatSigned(Number(value));
+  const number = Number(value);
+  const sign = number > 0 ? "+" : number < 0 ? "-" : "";
+  return `${sign}${formatPrice(Math.abs(number))}`;
 }
 
 function round(value, places) {
