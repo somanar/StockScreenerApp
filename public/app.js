@@ -18,6 +18,9 @@ const state = {
   chartInterval: "1m",
   showIndicators: false,
   autoRefresh: true,
+  extremeThreshold: Number(localStorage.getItem("stockScreenerThreshold")) || 10,
+  muteAlerts: localStorage.getItem("stockScreenerMute") === "true",
+  notifiedSymbols: new Set(),
   isLoading: false,
   nextRefreshAt: null
 };
@@ -64,6 +67,7 @@ const elements = {
   sortSelect: document.querySelector("#sortSelect"),
   orderFilterLabel: document.querySelector("#orderFilterLabel"),
   directionSelect: document.querySelector("#directionSelect"),
+  muteAlertsInput: document.querySelector("#muteAlertsInput"),
   autoRefreshInput: document.querySelector("#autoRefreshInput"),
   realtimeStatus: document.querySelector("#realtimeStatus"),
   prevPageButton: document.querySelector("#prevPageButton"),
@@ -79,10 +83,13 @@ const elements = {
   rangeButtons: document.querySelectorAll(".rangeButton"),
   indicatorButton: document.querySelector("#indicatorButton"),
   detailsPanel: document.querySelector("#detailsPanel"),
+  thresholdInput: document.querySelector("#thresholdInput"),
   chartCanvasWrap: document.querySelector(".chartCanvasWrap")
 };
 
 elements.limitSelect.value = String(state.perPage);
+if (elements.thresholdInput) elements.thresholdInput.value = String(state.extremeThreshold);
+if (elements.muteAlertsInput) elements.muteAlertsInput.checked = state.muteAlerts;
 normalizeMarketControls();
 
 elements.tabs.forEach((tab) => {
@@ -94,6 +101,7 @@ elements.tabs.forEach((tab) => {
     state.sector = "";
     state.reportDate = "";
     state.search = "";
+    state.notifiedSymbols.clear();
     state.sortDirection = topMarkets.has(state.market) ? "desc" : state.sortDirection;
     if (isEarningsMarket(state.market)) state.sortDirection = "asc";
     state.selectedSymbol = null;
@@ -159,7 +167,9 @@ function sortOptionsForMarket() {
       ["changePercent", "Current change %"],
       ["preMarketChangePercent", "Pre-market change %"],
       ["postMarketChangePercent", "After-hours change %"],
-      ["overnightChangePercent", "Overnight change %"]
+      ["overnightChangePercent", "Overnight change %"],
+      ["rsi", "RSI (14)"],
+      ["ema20", "EMA (20)"]
     ];
   }
 
@@ -239,9 +249,19 @@ elements.directionSelect.addEventListener("change", (event) => {
   state.page = 1;
   loadMarket();
 });
+elements.muteAlertsInput?.addEventListener("change", (event) => {
+  state.muteAlerts = event.target.checked;
+  localStorage.setItem("stockScreenerMute", String(state.muteAlerts));
+});
 elements.autoRefreshInput.addEventListener("change", (event) => {
   state.autoRefresh = event.target.checked;
   scheduleRefresh();
+});
+elements.thresholdInput?.addEventListener("input", (event) => {
+  state.extremeThreshold = Number(event.target.value) || 10;
+  localStorage.setItem("stockScreenerThreshold", String(state.extremeThreshold));
+  state.notifiedSymbols.clear();
+  renderRows();
 });
 elements.prevPageButton.addEventListener("click", () => {
   if (state.page <= 1) return;
@@ -260,6 +280,7 @@ window.addEventListener("popstate", () => {
   state.sector = "";
   state.reportDate = "";
   state.search = "";
+  state.notifiedSymbols.clear();
   state.sortDirection = topMarkets.has(state.market) ? "desc" : state.sortDirection;
   if (isEarningsMarket(state.market)) state.sortDirection = "asc";
   state.selectedSymbol = null;
@@ -384,6 +405,7 @@ function apiUrl() {
     const params = new URLSearchParams({
       market,
       sector: state.sector,
+      query: state.search,
       sortBy: activeSortBy(),
       direction: activeSortDirection()
     });
@@ -478,14 +500,36 @@ function renderRows() {
     return;
   }
 
+  let alertType = null;
+
   elements.rows.innerHTML = state.rows.map((row) => {
     const selectedClass = row.symbol === state.selectedSymbol ? " selected" : "";
+    const activePercent = Number(row.activeChangePercent ?? row.changePercent);
+    let extremeClass = "";
+    let extremeIcon = "";
+    if (activePercent >= state.extremeThreshold) {
+      extremeClass = " extreme-up";
+      extremeIcon = ` <span title="Up >${state.extremeThreshold}%">🚀</span>`;
+      if (!state.notifiedSymbols.has(row.symbol)) {
+        state.notifiedSymbols.add(row.symbol);
+        if (alertType !== "both") alertType = alertType === "down" ? "both" : "up";
+      }
+    } else if (activePercent <= -state.extremeThreshold) {
+      extremeClass = " extreme-down";
+      extremeIcon = ` <span title="Down >${state.extremeThreshold}%">📉</span>`;
+      if (!state.notifiedSymbols.has(row.symbol)) {
+        state.notifiedSymbols.add(row.symbol);
+        if (alertType !== "both") alertType = alertType === "up" ? "both" : "down";
+      }
+    } else {
+      state.notifiedSymbols.delete(row.symbol);
+    }
     const metricCells = rowCellsForMarket(row);
     return `
-      <tr class="watchRow${selectedClass}" data-symbol="${escapeHtml(row.symbol)}">
+      <tr class="watchRow${selectedClass}${extremeClass}" data-symbol="${escapeHtml(row.symbol)}">
         <td class="symbolCell" title="${escapeHtml(row.name)}">
           <span class="companyName">${escapeHtml(row.name)}</span>
-          <span class="tickerText">${escapeHtml(row.symbol)} <span class="sectorText">${escapeHtml(row.sector || row.exchange || "")}</span></span>
+          <span class="tickerText">${escapeHtml(row.symbol)}${extremeIcon} <span class="sectorText">${escapeHtml(row.sector || row.exchange || "")}</span></span>
         </td>
         <td>${miniSparkline(row)}</td>
         ${metricCells}
@@ -493,6 +537,11 @@ function renderRows() {
     `;
   }).join("");
   elements.watchlistCount.textContent = `${formatCompact(state.rows.length)} shown`;
+
+  if (alertType) {
+    playAlertSound(alertType);
+    triggerVisualAlert(alertType);
+  }
 
   elements.rows.querySelectorAll(".watchRow").forEach((rowElement) => {
     rowElement.addEventListener("click", () => {
@@ -534,7 +583,14 @@ function renderTableHeaders() {
 function metricHeadersForMarket() {
   if (isCryptoMarket(state.market)) return ["Current Price", "24h Change", "24h Volume"];
   if (isIndianMarket(state.market)) return ["Current Price", "Current %", "Close Price", "Close %"];
-  return ["Current Price", "Current %", "Pre Price", "Pre %", "After Hours", "After Hours %", "Overnight", "Overnight %"];
+  
+  const headers = ["Current Price", "Current %", "Pre Price", "Pre %", "After Hours", "After Hours %"];
+  if (state.market === "top-us") {
+    headers.push("RSI", "EMA (20)");
+  } else {
+    headers.push("Overnight", "Overnight %");
+  }
+  return headers;
 }
 
 function rowCellsForMarket(row) {
@@ -575,6 +631,20 @@ function rowCellsForMarket(row) {
       <td class="${valueClass(row.changePercent)}">${formatPercentOrDash(row.changePercent)}</td>
       <td>${formatPriceOrDash(closePrice)}</td>
       <td class="${valueClass(closePercent)}">${formatPercentOrDash(closePercent)}</td>
+    `;
+  }
+
+  if (state.market === "top-us") {
+    const rsiClass = row.rsi > 70 ? "negative" : row.rsi < 30 ? "positive" : "";
+    return `
+      <td>${formatNumberOrDash(row.price)}</td>
+      <td class="${valueClass(row.changePercent)}">${formatPercentOrDash(row.changePercent)}</td>
+      <td>${formatNumberOrDash(row.preMarketPrice)}</td>
+      <td class="${valueClass(row.preMarketChangePercent)}">${formatPercentOrDash(row.preMarketChangePercent)}</td>
+      <td>${formatNumberOrDash(row.postMarketPrice)}</td>
+      <td class="${valueClass(row.postMarketChangePercent)}">${formatPercentOrDash(row.postMarketChangePercent)}</td>
+      <td class="${rsiClass}">${formatNumberOrDash(row.rsi)}</td>
+      <td>${formatNumberOrDash(row.ema20)}</td>
     `;
   }
 
@@ -1121,7 +1191,7 @@ function drawChart(candles, row) {
   context.font = "11px Inter, system-ui, sans-serif";
   context.textAlign = "right";
   context.textBaseline = "middle";
-  context.fillStyle = "#9fb0c7";
+  context.fillStyle = "#475467";
   for (let index = 0; index <= 5; index += 1) {
     const value = low + ((high - low) * (5 - index)) / 5;
     const y = priceTop + ((high - value) / (high - low)) * (priceBottom - priceTop);
@@ -1182,7 +1252,7 @@ function drawChart(candles, row) {
   }
 
   context.textAlign = "left";
-  context.fillStyle = "#cfe0f6";
+  context.fillStyle = "#667085";
   context.fillText(`Volume ${formatCompact(visible[visible.length - 1]?.volume)}`, left, volumeTop - 9);
 
   if (Number.isInteger(chartState.hoverIndex)) {
@@ -1210,7 +1280,7 @@ function drawCrosshair(context, index) {
   const y = scale(candle.close, low, high, priceBottom, priceTop);
 
   context.save();
-  context.strokeStyle = "rgba(205, 220, 240, 0.7)";
+  context.strokeStyle = "rgba(71, 84, 103, 0.7)";
   context.lineWidth = 1;
   context.setLineDash([3, 5]);
   context.beginPath();
@@ -1223,9 +1293,9 @@ function drawCrosshair(context, index) {
 
   const closeLabel = formatChartPrice(candle.close);
   const labelWidth = Math.max(46, context.measureText(closeLabel).width + 14);
-  context.fillStyle = "#d7e6fb";
+  context.fillStyle = "#eef4ff";
   context.fillRect(right + 4, y - 10, labelWidth, 20);
-  context.fillStyle = "#07101a";
+  context.fillStyle = "#101828";
   context.textAlign = "center";
   context.textBaseline = "middle";
   context.fillText(closeLabel, right + 4 + labelWidth / 2, y);
@@ -1266,9 +1336,9 @@ function drawGrid(context, width, height, left, right) {
   const priceTop = 22;
   const priceBottom = Math.floor(height * 0.78);
   const volumeBottom = height - 24;
-  context.fillStyle = "#0d1219";
+  context.fillStyle = "#ffffff";
   context.fillRect(0, 0, width, height);
-  context.strokeStyle = "rgba(52, 69, 91, 0.45)";
+  context.strokeStyle = "rgba(203, 213, 225, 0.75)";
   context.lineWidth = 1;
 
   for (let index = 0; index <= 7; index += 1) {
@@ -1290,7 +1360,7 @@ function drawGrid(context, width, height, left, right) {
   context.beginPath();
   context.moveTo(left, priceBottom);
   context.lineTo(right, priceBottom);
-  context.strokeStyle = "rgba(122, 142, 166, 0.55)";
+  context.strokeStyle = "rgba(148, 163, 184, 0.75)";
   context.stroke();
 }
 
@@ -1494,4 +1564,47 @@ function escapeHtml(value) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
+}
+
+function playAlertSound(type = "up") {
+  if (state.muteAlerts) return;
+
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    if (ctx.state === "suspended") ctx.resume();
+
+    const playBeep = (time, freq) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(freq, time); // Custom pitch
+      gain.gain.setValueAtTime(0.1, time); // Low volume
+      gain.gain.exponentialRampToValueAtTime(0.00001, time + 0.1); // Fade out very quickly
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(time);
+      osc.stop(time + 0.1);
+    };
+
+    const now = ctx.currentTime;
+    if (type === "up" || type === "both") {
+      playBeep(now, 880);        // High pitch (A5) for gains
+      playBeep(now + 0.15, 880);
+    }
+    if (type === "down" || type === "both") {
+      playBeep(now, 330);        // Lower pitch (E4) for drops
+      playBeep(now + 0.15, 330);
+    }
+  } catch (e) {
+    console.warn("Audio alert failed", e);
+  }
+}
+
+function triggerVisualAlert(type) {
+  elements.workspace.classList.remove("flash-up", "flash-down", "flash-both");
+  void elements.workspace.offsetWidth; // Trigger reflow to restart animation if already running
+  elements.workspace.classList.add(`flash-${type}`);
+  setTimeout(() => {
+    elements.workspace.classList.remove(`flash-${type}`);
+  }, 1500);
 }

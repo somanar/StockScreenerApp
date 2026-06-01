@@ -1,13 +1,13 @@
 :root {
-  color-scheme: dark;
-  --bg: #080c12;
-  --panel: #0d1219;
-  --panel-2: #111821;
-  --panel-3: #151e29;
-  --ink: #e8f1ff;
-  --muted: #8fa0b7;
-  --line: #1d2836;
-  --line-strong: #2c3a4c;
+  color-scheme: light;
+  --bg: #ffffff;
+  --panel: #ffffff;
+  --panel-2: #f8fafc;
+  --panel-3: #eef4ff;
+  --ink: #101828;
+  --muted: #667085;
+  --line: #e4e7ec;
+  --line-strong: #cbd5e1;
   --accent: #00c477;
   --accent-soft: rgba(0, 196, 119, 0.16);
   --loss: #ff3f5f;
@@ -88,7 +88,7 @@ p {
 
 .tab {
   flex: 0 0 auto;
-  color: #bdd0ea;
+  color: #344054;
   text-decoration: none;
   padding: 5px 9px;
   border: 1px solid var(--line);
@@ -98,8 +98,8 @@ p {
 
 .tab.active {
   background: var(--panel-3);
-  color: #ffffff;
-  border-color: #41536a;
+  color: #101828;
+  border-color: #84adff;
 }
 
 main {
@@ -142,7 +142,7 @@ select {
   border: 1px solid var(--line-strong);
   border-radius: 3px;
   padding: 0 9px;
-  background: #0a0f16;
+  background: #ffffff;
   color: var(--ink);
 }
 
@@ -344,7 +344,7 @@ input {
 .watchlistPanel {
   min-width: 0;
   border-right: 1px solid var(--line);
-  background: #090e15;
+  background: #ffffff;
 }
 
 .watchlistHeader {
@@ -388,7 +388,7 @@ table {
 th,
 td {
   padding: 8px 10px;
-  border-bottom: 1px solid rgba(29, 40, 54, 0.78);
+  border-bottom: 1px solid #e4e7ec;
   text-align: right;
   white-space: nowrap;
   font-size: 12px;
@@ -398,8 +398,8 @@ th {
   position: sticky;
   top: 0;
   z-index: 1;
-  background: #090e15;
-  color: #9fb0c7;
+  background: #f8fafc;
+  color: #475467;
   font-size: 10px;
   font-weight: 600;
   text-transform: none;
@@ -415,12 +415,12 @@ td:first-child {
 }
 
 .watchRow:hover {
-  background: rgba(255, 255, 255, 0.035);
+  background: #f8fafc;
 }
 
 .watchRow.selected {
-  background: #111b29;
-  outline: 1px solid #34455b;
+  background: #eef4ff;
+  outline: 1px solid #84adff;
   outline-offset: -1px;
 }
 
@@ -432,7 +432,7 @@ td:first-child {
   display: block;
   max-width: 150px;
   overflow: hidden;
-  color: #ffffff;
+  color: #101828;
   font-size: 12px;
   text-overflow: ellipsis;
 }
@@ -449,13 +449,13 @@ td:first-child {
   white-space: normal;
   text-align: left;
   line-height: 1.35;
-  color: #d7e6fb;
+  color: #344054;
 }
 
 .tickerText {
   display: block;
   margin-top: 3px;
-  color: #bfd0e6;
+  color: #667085;
   font-size: 11px;
 }
 
@@ -496,7 +496,7 @@ td:first-child {
 
 .selectedSymbol {
   margin-right: 14px;
-  color: #ffffff;
+  color: #101828;
   font-size: 16px;
   font-weight: 700;
 }
@@ -508,13 +508,13 @@ td:first-child {
 }
 
 .detailsLink {
-  color: #bcd0ee;
+  color: #0b5cab;
   font-size: 12px;
   text-decoration: none;
 }
 
 .detailsLink:hover {
-  color: #ffffff;
+  color: #084a92;
 }
 
 .chartTabs,
@@ -524,7 +524,7 @@ td:first-child {
   align-items: center;
   padding: 8px 16px;
   border-bottom: 1px solid var(--line);
-  color: #cfe0f6;
+  color: #475467;
   font-size: 12px;
   overflow-x: auto;
 }
@@ -544,12 +544,12 @@ td:first-child {
 .chartTab:hover,
 .toolbarButton:hover,
 .rangeButton:hover {
-  color: #ffffff;
+  color: #101828;
   background: transparent;
 }
 
 .chartTab.active {
-  color: #ffffff;
+  color: #101828;
   font-weight: 700;
 }
 
@@ -560,20 +560,21 @@ td:first-child {
 
 .activeRange {
   padding: 3px 8px;
-  border: 1px solid #53657c;
+  border: 1px solid #84adff;
   border-radius: 3px;
-  color: #ffffff;
+  color: #101828;
+  background: #eef4ff;
 }
 
 .toolbarButton.active {
-  color: #ffffff;
+  color: #101828;
   font-weight: 700;
 }
 
 .chartMeta {
   min-height: 30px;
   padding: 8px 16px 0;
-  color: #c7d7ed;
+  color: #667085;
   font-size: 12px;
 }
 
@@ -603,7 +604,7 @@ td:first-child {
   min-height: 62px;
   padding: 12px;
   border: 1px solid var(--line);
-  background: #0a0f16;
+  background: #ffffff;
 }
 
 .detailItem span {
@@ -615,7 +616,7 @@ td:first-child {
 
 .detailItem strong,
 .detailItem a {
-  color: #ffffff;
+  color: #101828;
   font-size: 14px;
   line-height: 1.35;
   text-decoration: none;
@@ -703,4 +704,26 @@ td:first-child {
   td:nth-child(2) {
     display: none;
   }
+}
+
+@keyframes alertFlashUp {
+  0% { background-color: rgba(0, 196, 119, 0.3); }
+  100% { background-color: transparent; }
+}
+@keyframes alertFlashDown {
+  0% { background-color: rgba(255, 63, 95, 0.3); }
+  100% { background-color: transparent; }
+}
+@keyframes alertFlashBoth {
+  0% { background-color: rgba(242, 185, 75, 0.3); }
+  100% { background-color: transparent; }
+}
+.flash-up {
+  animation: alertFlashUp 1.5s ease-out;
+}
+.flash-down {
+  animation: alertFlashDown 1.5s ease-out;
+}
+.flash-both {
+  animation: alertFlashBoth 1.5s ease-out;
 }

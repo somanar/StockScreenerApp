@@ -92,6 +92,14 @@
             <option value="desc">Descending</option>
           </select>
         </label>
+        <label id="thresholdFilterLabel">
+          Alert Threshold %
+          <input id="thresholdInput" type="number" value="10" min="1" max="100" style="width: 60px;">
+        </label>
+        <label class="checkboxLabel" id="muteAlertsLabel">
+          <input id="muteAlertsInput" type="checkbox">
+          Mute alerts
+        </label>
         <label class="checkboxLabel">
           <input id="autoRefreshInput" type="checkbox" checked>
           Auto refresh
