@@ -50,6 +50,9 @@ const elements = {
   toolbar: document.querySelector(".toolbar"),
   workspace: document.querySelector(".workspace"),
   watchlistPanel: document.querySelector(".watchlistPanel"),
+  tableWrap: document.querySelector(".tableWrap"),
+  topScrollWrap: document.querySelector(".topScrollWrap"),
+  topScrollSpacer: document.querySelector(".topScrollSpacer"),
   chartPanel: document.querySelector(".chartPanel"),
   tabs: document.querySelectorAll(".tab"),
   marketTitle: document.querySelector("#marketTitle"),
@@ -290,11 +293,13 @@ window.addEventListener("popstate", () => {
 });
 
 updateToolbarMode();
+setupTopTableScroll();
 loadMarket();
 countdownTimer = setInterval(updateRealtimeStatus, 1000);
 window.addEventListener("resize", () => {
   const row = state.rows.find((item) => item.symbol === state.selectedSymbol);
   if (row) loadChart(row);
+  syncTopTableScrollSize();
 });
 elements.priceChart.addEventListener("mousemove", handleChartHover);
 elements.priceChart.addEventListener("mouseleave", () => {
@@ -490,6 +495,7 @@ function renderRows() {
       `;
     }).join("");
     elements.watchlistCount.textContent = `${formatCompact(state.rows.length)} shown`;
+    syncTopTableScrollSize();
     elements.rows.querySelectorAll(".watchRow").forEach((rowElement) => {
       rowElement.addEventListener("click", () => {
         state.selectedSymbol = rowElement.dataset.symbol;
@@ -525,11 +531,12 @@ function renderRows() {
       state.notifiedSymbols.delete(row.symbol);
     }
     const metricCells = rowCellsForMarket(row);
+    const tickerMarkup = tickerMarkupForRow(row, extremeIcon);
     return `
       <tr class="watchRow${selectedClass}${extremeClass}" data-symbol="${escapeHtml(row.symbol)}">
         <td class="symbolCell" title="${escapeHtml(row.name)}">
           <span class="companyName">${escapeHtml(row.name)}</span>
-          <span class="tickerText">${escapeHtml(row.symbol)}${extremeIcon} <span class="sectorText">${escapeHtml(row.sector || row.exchange || "")}</span></span>
+          ${tickerMarkup}
         </td>
         <td>${miniSparkline(row)}</td>
         ${metricCells}
@@ -537,6 +544,7 @@ function renderRows() {
     `;
   }).join("");
   elements.watchlistCount.textContent = `${formatCompact(state.rows.length)} shown`;
+  syncTopTableScrollSize();
 
   if (alertType) {
     playAlertSound(alertType);
@@ -550,6 +558,52 @@ function renderRows() {
       updateSelectedPanel();
     });
   });
+}
+
+function setupTopTableScroll() {
+  if (!elements.tableWrap || !elements.topScrollWrap || !elements.topScrollSpacer) return;
+  let syncingFromTop = false;
+  let syncingFromTable = false;
+
+  elements.topScrollWrap.addEventListener("scroll", () => {
+    if (syncingFromTable) return;
+    syncingFromTop = true;
+    elements.tableWrap.scrollLeft = elements.topScrollWrap.scrollLeft;
+    syncingFromTop = false;
+  });
+
+  elements.tableWrap.addEventListener("scroll", () => {
+    if (syncingFromTop) return;
+    syncingFromTable = true;
+    elements.topScrollWrap.scrollLeft = elements.tableWrap.scrollLeft;
+    syncingFromTable = false;
+  });
+}
+
+function syncTopTableScrollSize() {
+  if (!elements.tableWrap || !elements.topScrollWrap || !elements.topScrollSpacer) return;
+  requestAnimationFrame(() => {
+    const scrollWidth = elements.tableWrap.scrollWidth;
+    const clientWidth = elements.tableWrap.clientWidth;
+    elements.topScrollSpacer.style.width = `${scrollWidth}px`;
+    elements.topScrollWrap.classList.toggle("isHidden", scrollWidth <= clientWidth + 1);
+    elements.topScrollWrap.scrollLeft = elements.tableWrap.scrollLeft;
+  });
+}
+
+function tickerMarkupForRow(row, extraMarkup = "") {
+  const sectorMarkup = ` <span class="sectorText">${escapeHtml(row.sector || row.exchange || "")}</span>`;
+  if (!isIndianMarket(state.market)) {
+    return `<span class="tickerText">${escapeHtml(row.symbol)}${extraMarkup}${sectorMarkup}</span>`;
+  }
+
+  const href = nseQuoteUrl(row.symbol);
+  return `<a class="tickerText tickerLink" href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer">${escapeHtml(row.symbol)}${extraMarkup}${sectorMarkup}</a>`;
+}
+
+function nseQuoteUrl(symbol) {
+  const nseSymbol = String(symbol || "").replace(/\.NS$/i, "").trim().toUpperCase();
+  return `https://www.nseindia.com/get-quotes/equity?symbol=${encodeURIComponent(nseSymbol)}`;
 }
 
 function renderTableHeaders() {

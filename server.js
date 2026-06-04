@@ -2869,10 +2869,14 @@ async function readStoredTopMarket(market, { sector, query, sortBy, sortDirectio
   if (universe.length) {
     rows = rows.map((row) => enrichStoredTopRow(row, universe));
   }
-  if (market === "top-us" && hasInvalidTopUsSnapshot(rows)) {
+  if (market === "top-us") {
     const fallbackRows = await readStoredUsRowsForTopMarket();
-    if (fallbackRows.length) rows = fallbackRows;
-    else return null;
+    if (hasInvalidTopUsSnapshot(rows)) {
+      if (fallbackRows.length) rows = fallbackRows;
+      else return null;
+    } else if (fallbackRows.length) {
+      rows = mergeStoredRowsBySymbol(rows, fallbackRows);
+    }
   }
 
   const requestedSector = normalizeSector(sector);
@@ -2901,6 +2905,19 @@ async function readStoredTopMarket(market, { sector, query, sortBy, sortDirectio
     scannedAt: newestScannedAt(rows),
     ageMs: ageMs(newestScannedAt(rows))
   };
+}
+
+function mergeStoredRowsBySymbol(primaryRows, secondaryRows) {
+  const merged = new Map();
+  [...secondaryRows, ...primaryRows].forEach((row) => {
+    const symbol = String(row.symbol || "").toUpperCase();
+    if (!symbol) return;
+    const existing = merged.get(symbol);
+    if (!existing || new Date(row.scannedAt || 0) >= new Date(existing.scannedAt || 0)) {
+      merged.set(symbol, row);
+    }
+  });
+  return [...merged.values()];
 }
 
 async function readStoredUsRowsForTopMarket() {

@@ -375,6 +375,22 @@ input {
   display: none;
 }
 
+.topScrollWrap {
+  overflow-x: auto;
+  overflow-y: hidden;
+  height: 16px;
+  border-bottom: 1px solid var(--line);
+  background: #ffffff;
+}
+
+.topScrollWrap.isHidden {
+  display: none;
+}
+
+.topScrollSpacer {
+  height: 1px;
+}
+
 .tableWrap {
   overflow: auto;
   max-height: calc(100vh - 235px);
@@ -457,6 +473,15 @@ td:first-child {
   margin-top: 3px;
   color: #667085;
   font-size: 11px;
+}
+
+.tickerLink {
+  text-decoration: none;
+}
+
+.tickerLink:hover {
+  color: #175cd3;
+  text-decoration: underline;
 }
 
 .sectorText {
