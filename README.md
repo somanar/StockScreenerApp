@@ -43,6 +43,40 @@ npm.cmd start
 
 Open `http://localhost:3000`.
 
+Health check:
+
+```text
+http://localhost:3000/api/health
+```
+
+## Keep Running On Windows
+
+Use PM2 to keep the Node server running after crashes and restart it after Windows reboots.
+
+```powershell
+cd "C:\Users\SOMAN\OneDrive\Documents\StockScreenerApp"
+npm install -g pm2
+pm2 start server.js --name stock-screener
+pm2 save
+```
+
+Install PM2's Windows startup helper so the saved process list starts after reboot:
+
+```powershell
+npm install -g pm2-windows-startup
+pm2-startup install
+pm2 save
+```
+
+Useful PM2 commands:
+
+```powershell
+pm2 status
+pm2 logs stock-screener
+pm2 restart stock-screener
+pm2 stop stock-screener
+```
+
 ## Supabase table
 
 The app writes scan results through the Supabase REST API into `SUPABASE_SIGNALS_TABLE`, which defaults to `stock_signals`.
