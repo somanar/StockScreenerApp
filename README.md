@@ -75,6 +75,7 @@ pm2 status
 pm2 logs stock-screener
 pm2 restart stock-screener
 pm2 stop stock-screener
+pm2 start stock-screener
 ```
 
 ## Supabase table
